@@ -43,6 +43,11 @@ HELP_MSG = ("I am the amazing Crowd Guru. Ask me a question by typing '/tellme "
             "more, go to %s/")
 MAX_ANSWER_TIME = 120
 
+class User(db.Model):
+  user = db.TextProperty(required=True)
+  show = db.TextProperty()
+  show_time = db.DateTimeProperty()
+  available = db.BooleanProperty()
 
 class Question(db.Model):
   question = db.TextProperty(required=True)
@@ -209,6 +214,101 @@ class XmppHandler(xmpp_handlers.CommandHandler):
           return
       message.reply(PONDER_MSG)
 
+  def tellme_command(self, message=None):
+    im_from = db.IM("xmpp", message.sender)
+    asked_question = self._GetAsked(im_from)
+    currently_answering = self._GetAnswering(im_from)
+
+    if asked_question:
+      # Already have a question
+      message.reply(WAIT_MSG)
+    else:
+      # Asking a question
+      asked_question = Question(question=message.arg, asker=im_from)
+      asked_question.put()
+
+      if not currently_answering:
+        # Try and find one for them to answer
+        question = Question.assignQuestion(im_from)
+        if question:
+          message.reply(TELLME_MSG % (question.question,))
+          return
+      message.reply(PONDER_MSG)
+
+
+class XmppSubscribeHandler(webapp.RequestHandler):
+  """Handles a user subscription."""
+
+  def post(self):
+    sender = self.request.get('from').split('/')[0]
+    logging.info('User subscribe ' + sender)
+    logging.info('stanza ' + self.request.get('stanza'))
+    logging.info('body ' + self.request.get('body'))
+    
+class XmppUnsubscribeHandler(webapp.RequestHandler):
+  """Handles a user unsubscription."""
+
+  def post(self):
+    sender = self.request.get('from').split('/')[0]
+    logging.info('User unsubscribe ' + sender)
+    logging.info('stanza ' + self.request.get('stanza'))
+    logging.info('body ' + self.request.get('body'))
+
+class XmppSubscribedHandler(webapp.RequestHandler):
+  """Handles a user subscription."""
+
+  def post(self):
+    sender = self.request.get('from').split('/')[0]
+    logging.info('User subscribed ' + sender)
+    logging.info('stanza ' + self.request.get('stanza'))
+    logging.info('body ' + self.request.get('body'))
+    
+class XmppUnsubscribedHandler(webapp.RequestHandler):
+  """Handles a user unsubscription."""
+
+  def post(self):
+    sender = self.request.get('from').split('/')[0]
+    logging.info('User unsubscribed ' + sender)
+    logging.info('stanza ' + self.request.get('stanza'))
+    logging.info('body ' + self.request.get('body'))
+
+class XmppAvailableHandler(webapp.RequestHandler):
+  """Handles if a user is available."""
+
+  def post(self):
+    sender = self.request.get('from').split('/')[0]
+    u = User.get_or_insert(sender)
+    u.show = self.request.get('show')
+    u.show_time = datetime.datetime.now()
+    u.available = True
+    u.put()
+    logging.info('User available ' + sender)
+    logging.info('stanza ' + self.request.get('stanza'))
+    logging.info('body ' + self.request.get('body'))
+    logging.info('show ' + self.request.get('show'))
+    logging.info('status ' + self.request.get('status'))
+    logging.info('presence ' + self.request.get('presence'))
+
+class XmppUnavailableHandler(webapp.RequestHandler):
+  """Handles if a user is unavailable."""
+
+  def post(self):
+    sender = self.request.get('from').split('/')[0]
+    u = User.get_or_insert(sender)
+    u.available = False
+    u.put()
+    logging.info('User unavailable ' + sender)
+    logging.info('stanza ' + self.request.get('stanza'))
+    logging.info('body ' + self.request.get('body'))
+
+class XmppProbeHandler(webapp.RequestHandler):
+  """Handles if a user is probing the appengine."""
+
+  def post(self):
+    sender = self.request.get('from').split('/')[0]
+    logging.info('User probe ' + sender)
+    logging.info('stanza ' + self.request.get('stanza'))
+    logging.info('body ' + self.request.get('body'))
 
 class LatestHandler(webapp.RequestHandler):
   """Displays the most recently answered questions."""
@@ -219,16 +319,38 @@ class LatestHandler(webapp.RequestHandler):
 
   def get(self):
     q = Question.all().order('-answered').filter('answered >', None)
+    u = User.all()
     template_values = {
       'questions': q.fetch(20),
+      'users': u.fetch(20)
     }
     self.Render("latest.html", template_values)
 
+class ConnectHandler(webapp.RequestHandler):
+  """Connects the user in the webapp to expert."""
+
+  def get(self):
+    user = self.request.get('user')
+    u = User.get_by_key_name(user)
+    if u == None:
+        self.response.out.write("<html><body><p>No such user</p></body></html>")
+        logging.error('Connect request to invalid user ' + user)
+    url = 'https://plus.google.com/hangouts/_/2e3e57ff748dd2c7c79e1c40c274cca933a8d984?authuser=0&hl=en-US'
+    xmpp.send_message(u.user, url)
+    self.redirect(url)
 
 def main():
   app = webapp.WSGIApplication([
       ('/', LatestHandler),
       ('/_ah/xmpp/message/chat/', XmppHandler),
+      ('/_ah/xmpp/subscription/subscribe/', XmppSubscribeHandler),
+      ('/_ah/xmpp/subscription/subscribed/', XmppSubscribedHandler),
+      ('/_ah/xmpp/subscription/unsubscribe/', XmppUnsubscribeHandler), # unused
+      ('/_ah/xmpp/subscription/unsubscribed/', XmppUnsubscribedHandler), # unused
+      ('/_ah/xmpp/presence/available/', XmppAvailableHandler),
+      ('/_ah/xmpp/presence/unavailable/', XmppUnavailableHandler),
+      ('/_ah/xmpp/presence/probe/', XmppProbeHandler),
+      ('/connect', ConnectHandler),
       ], debug=True)
   wsgiref.handlers.CGIHandler().run(app)
 

@@ -20,7 +20,18 @@
     by replying to him.</td></tr>
     <tr><th>/help</th><td>Display a quick rundown of available commands.</td></tr>
   </table>
-  
+
+  <h2>Expert list</h2>
+  <ul>
+    {% for user in users %}
+      <li>{{user.user}}</li>
+      <li>{{user.show}}</li>
+      <li>{{user.show_time}}</li>
+	  <li>{{user.available}}</li>
+	  <li><a href="/connect?user={{user.user}}">Hangout</a></li>
+    {% endfor %}
+  </ul>
+    
   <h2>Latest questions answered by the Amazing Crowd Guru</h2>
   <dl>
     {% for question in questions %}

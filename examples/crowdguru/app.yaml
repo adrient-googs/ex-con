@@ -1,5 +1,5 @@
-application: crowdguru
-version: 1
+application: expert-connect #google.com:expert
+version: 2
 runtime: python
 api_version: 1
 
@@ -11,4 +11,6 @@ handlers:
 
 inbound_services:
 - xmpp_message
+- xmpp_presence
+- xmpp_subscribe
 
