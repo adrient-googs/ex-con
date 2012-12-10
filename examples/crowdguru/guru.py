@@ -25,7 +25,9 @@ from google.appengine.ext.ereporter import report_generator
 from google.appengine.ext.webapp import template
 from google.appengine.ext.webapp import xmpp_handlers
 
-
+MUTE_MSG = "You have muted ExpertConnect for one hour."
+REQUEST_MSG = "Your expertise is needed! Please click on the following link: %s"
+CATEGORY_MSG = "You are now listed as an expert in %s"
 PONDER_MSG = "Hmm. Let me think on that a bit."
 TELLME_MSG = "While I'm thinking, perhaps you can answer me this: %s"
 SOMEONE_ANSWERED_MSG = ("We seek those who are wise and fast. One out of two "
@@ -43,11 +45,17 @@ HELP_MSG = ("I am the amazing Crowd Guru. Ask me a question by typing '/tellme "
             "more, go to %s/")
 MAX_ANSWER_TIME = 120
 
+class Category(db.Model):
+  category = db.TextProperty(required=True)
+  experts = db.ListProperty(db.TextProperty)
+
 class User(db.Model):
   user = db.TextProperty(required=True)
   show = db.TextProperty()
   show_time = db.DateTimeProperty()
   available = db.BooleanProperty()
+  mute_time = db.DateTimeProperty()
+  categories = db.ListProperty(db.TextProperty)
 
 class Question(db.Model):
   question = db.TextProperty(required=True)
@@ -214,27 +222,20 @@ class XmppHandler(xmpp_handlers.CommandHandler):
           return
       message.reply(PONDER_MSG)
 
-  def tellme_command(self, message=None):
-    im_from = db.IM("xmpp", message.sender)
-    asked_question = self._GetAsked(im_from)
-    currently_answering = self._GetAnswering(im_from)
+  def mute_command(self, message=None):
+    u = User.get_or_insert(message.sender)
+    u.mute_time = datetime.datetime.now()
+    u.put()
+    message.reply(MUTE_MSG)
 
-    if asked_question:
-      # Already have a question
-      message.reply(WAIT_MSG)
-    else:
-      # Asking a question
-      asked_question = Question(question=message.arg, asker=im_from)
-      asked_question.put()
-
-      if not currently_answering:
-        # Try and find one for them to answer
-        question = Question.assignQuestion(im_from)
-        if question:
-          message.reply(TELLME_MSG % (question.question,))
-          return
-      message.reply(PONDER_MSG)
-
+  def addcategory_command(self, message=None):
+    c = Category.get_or_insert(message.arg)
+    u = User.get_or_insert(message.sender)
+    u.categories.append(message.arg)
+    c.users.append(user)
+    c.put()
+    u.put()
+    message.reply(CATEGORY_MSG % (message.arg,))
 
 class XmppSubscribeHandler(webapp.RequestHandler):
   """Handles a user subscription."""
@@ -320,9 +321,11 @@ class LatestHandler(webapp.RequestHandler):
   def get(self):
     q = Question.all().order('-answered').filter('answered >', None)
     u = User.all()
+    c = Categories.all()
     template_values = {
       'questions': q.fetch(20),
-      'users': u.fetch(20)
+      'users': u.fetch(20),
+      'categories': c.fetch(20)
     }
     self.Render("latest.html", template_values)
 
@@ -336,7 +339,7 @@ class ConnectHandler(webapp.RequestHandler):
         self.response.out.write("<html><body><p>No such user</p></body></html>")
         logging.error('Connect request to invalid user ' + user)
     url = 'https://plus.google.com/hangouts/_/2e3e57ff748dd2c7c79e1c40c274cca933a8d984?authuser=0&hl=en-US'
-    xmpp.send_message(u.user, url)
+    xmpp.send_message(u.user, REQUEST_MSG % (url,))
     self.redirect(url)
 
 def main():
