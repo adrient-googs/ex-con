@@ -47,7 +47,6 @@ MAX_ANSWER_TIME = 120
 
 class Category(db.Model):
   category = db.TextProperty(required=True)
-  experts = db.ListProperty(db.TextProperty)
 
 class User(db.Model):
   user = db.TextProperty(required=True)
@@ -55,7 +54,10 @@ class User(db.Model):
   show_time = db.DateTimeProperty()
   available = db.BooleanProperty()
   mute_time = db.DateTimeProperty()
-  categories = db.ListProperty(db.TextProperty)
+
+class UserToCategory(db.Model):
+  user = db.TextProperty(required=True)
+  category = db.TextProperty(required=True)
 
 class Question(db.Model):
   question = db.TextProperty(required=True)
@@ -229,6 +231,7 @@ class XmppHandler(xmpp_handlers.CommandHandler):
     message.reply(MUTE_MSG)
 
   def addcategory_command(self, message=None):
+    utoc = UserToCategory.get_or_insert()
     c = Category.get_or_insert(message.arg)
     u = User.get_or_insert(message.sender)
     u.categories.append(message.arg)
@@ -321,13 +324,27 @@ class LatestHandler(webapp.RequestHandler):
   def get(self):
     q = Question.all().order('-answered').filter('answered >', None)
     u = User.all()
-    c = Categories.all()
+    c = Category.all()
     template_values = {
       'questions': q.fetch(20),
       'users': u.fetch(20),
       'categories': c.fetch(20)
     }
     self.Render("latest.html", template_values)
+
+class ManageAccountHandler(webapp.RequestHandler):
+  """Presents a page for the user to sign up for expert categories."""
+
+  def Render(self, template_file, template_values):
+    path = os.path.join(os.path.dirname(__file__), 'templates', template_file)
+    self.response.out.write(template.render(path, template_values))
+
+  def get(self):
+    c = Category.all()
+    template_values = {
+      'categories': c.fetch(20)
+    }
+    self.Render("manage_account.html", template_values)
 
 class ConnectHandler(webapp.RequestHandler):
   """Connects the user in the webapp to expert."""
@@ -353,6 +370,7 @@ def main():
       ('/_ah/xmpp/presence/available/', XmppAvailableHandler),
       ('/_ah/xmpp/presence/unavailable/', XmppUnavailableHandler),
       ('/_ah/xmpp/presence/probe/', XmppProbeHandler),
+      ('/manageAccount', ManageAccountHandler),
       ('/connect', ConnectHandler),
       ], debug=True)
   wsgiref.handlers.CGIHandler().run(app)
