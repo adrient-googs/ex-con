@@ -59,47 +59,42 @@ class ManageAccountHandler(webapp.RequestHandler):
     if user == None:
       self.redirect(users.create_login_url("/manageAccount"))
       return
-    c = Category.all()
     u = User.get_by_key_name(user.email())
     if u == None:
       u = User(email=user.email())
       u.put()
-    utoc = UserToCategory.all()
-    utoc.filter("email =", u)
-    a = []
-    b = []
-    for user_to_category in utoc.fetch(100):
-      a.append(user_to_category.category.key().name())
-    logging.error(a)
-    for category in c.fetch(100):
-      if category.key().name() in a:
-        b.append({'checked': True, 'name': category.name})
+    existing_categories = []
+    display_categories = []
+    for category in u.get_categories():
+      existing_categories.append(category.key().name())
+    for category in Category.all().fetch(100):
+      if category.key().name() in existing_categories:
+        display_categories.append({'checked': True, 'name': category.name})
       else:
-        b.append({'checked': False, 'name': category.name})
-    logging.error(b)
+        display_categories.append({'checked': False, 'name': category.name})
     template_values = {
-      'categories': b,
+      'categories': display_categories,
       'email': user.email(),
       'logout': users.create_logout_url("/")
     }
     self.Render("manage_account.html", template_values)
     
   def post(self):
-    current_user = users.get_current_user()
-    if current_user == None:
+    user = users.get_current_user()
+    if user == None:
       self.redirect(users.create_login_url("/manageAccount"))
       return
-    c = Category.all()
-    u = User.get_by_key_name(current_user.email())
+    u = User.get_by_key_name(user.email())
     if u == None:
-      u = User(email=current_user.email())
+      u = User(email=user.email())
       u.put()
-    for category in c.fetch(100):
+    utoc = UserToCategory.all()
+    utoc.filter("user =", u)
+    for existing_utoc in utoc.fetch(100):
+      existing_utoc.delete()
+    for category in Category.all().fetch(100):
       if self.request.get(category.name) == 'true':
-        utoc = UserToCategory.get_by_key_name(u.key().name() + '//' + category.key().name())
-        if utoc == None:
-          utoc = UserToCategory(user=u, category=category)
-          utoc.put()
+        u.add_category(category.name)
     self.redirect("/manageAccount")
 
 class ConnectHandler(webapp.RequestHandler):
