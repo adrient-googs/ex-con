@@ -4,17 +4,30 @@
   <link rel="stylesheet" type="text/css" href="/static/base.css" />
 </head>
 <body>
-  <h1>Account Management for {{email}}</h1>
+  <!-- the title bar at the top of the screen -->
+  <div id="titlebar">
 
-	<a href={{logout}}>Logout of account</a>
+    <!-- title of the app -->
+    <span id="title">Account Management</span>
+    
+    <!-- options that the user has -->
+    <span id="options">
+    </span>
+		
+		<span id="account">
+			{{email}}
+			<a href={{logout}}>Logout</a>
+		</span>
+  </div>
+
   <form method="POST" action="/manageAccount">
   {% for category in categories %}
-    <input type="checkbox" name="{{category.name}}" value="true"
+    <input class="checkbox" type="checkbox" name="{{category.name}}" value="true"
 		{% if category.checked %}
 			checked
 		{% endif %}>{{category.name}}<br>
   {% endfor %}
-	<input type="submit">
+	<input class="submitbutton" type="submit">
   </form>
 
 </body>
