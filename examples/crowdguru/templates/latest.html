@@ -1,10 +1,27 @@
 <html>
 <head>
-  <title>Latest questions answered by the amazing Crowd Guru</title>
-  <link rel="stylesheet" type="text/css" href="/static/base.css" />
+  <title>Expert Connect</title>
+  <link rel="stylesheet" type="text/css" href="/static/base.css"/>
 </head>
+
 <body>
-  <h1>The Amazing Crowd Guru</h1>
+  <!-- the title bar at the top of the screen -->
+  <div id="titlebar">
+
+    <!-- title of the app -->
+    <span id="title">Expert Connect</span>
+    
+    <!-- options that the user has -->
+    <span id="options">
+    </span>
+  </div>
+  
+  <!-- this is where we see a list of experts -->
+  <div id="expertlist">
+    this is a list of experts
+  </div>
+  
+  <!-- <h1>The Amazing Crowd Guru</h1>
   <h2>What's this?</h2>
   <p>The Amazing Crowd Guru is here to answer all your questions. Add
   <em>crowdguru@appspot.com</em> to your Google talk or Jabber friend list, and
@@ -27,9 +44,9 @@
       <li>{{user.user}}</li>
       <li>{{user.show}}</li>
       <li>{{user.show_time}}</li>
-	  <li>{{user.available}}</li>
-	  <li><a href="/connect?user={{user.user}}">Hangout</a></li>
+    <li>{{user.available}}</li>
+    <li><a href="/connect?user={{user.user}}">Hangout</a></li>
     {% endfor %}
-  </ul>
+  </ul> -->
 </body>
 </html>
