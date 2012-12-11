@@ -10,6 +10,11 @@ class Category(db.Model):
     """Constructor."""
     db.Model.__init__(self, key_name=kwargs['name'], **kwargs)
     
+  def get_experts(self):
+    """Returns all users associated with this Category."""
+    return [pair.user
+      for pair in UserToCategory.all().filter('category =', self)]
+    
 class User(db.Model):
   email = db.StringProperty(required=True)
   show = db.StringProperty()
@@ -19,7 +24,24 @@ class User(db.Model):
   
   def __init__(self, *args, **kwargs):
     """Constructor."""
-    db.Model.__init__(self, key_name=kwargs['email'], **kwargs)
+    key_name = kwargs['email']
+    if 'key_name' in kwargs:
+      assert kwargs['key_name'] == key_name      
+      db.Model.__init__(self, **kwargs)
+    else:
+      db.Model.__init__(self, key_name=key_name, **kwargs)
+    
+  def get_categories(self):
+    """Returns a list of categories associated with this user."""
+    return [pair.category
+      for pair in UserToCategory.all().filter('user =', self)]
+    
+  def add_category(self, category_name):
+    """Associates this user with a new category."""
+    category = Category.all().filter('name =', category_name).get()
+    assert category
+    key_name = UserToCategory.get_key_name(self.email, category.name)
+    pair = UserToCategory.get_or_insert(key_name, user=self, category=category)
 
 class UserToCategory(db.Model):
   user = db.ReferenceProperty(User, required=True)
@@ -28,7 +50,24 @@ class UserToCategory(db.Model):
   def __init__(self, *args, **kwargs):
     """Constructor."""
     # make the user/category pair unique
-    key_name = '%s//%s' % (kwargs['user'].key(), kwargs['category'].key())
+    user = kwargs['user'] 
+    if type(user) == db.Key:
+      user = db.get(user)
+    assert type(user) == User
+
+    category = kwargs['category']
+    if type(category) == db.Key:
+      category = db.get(category)
+    assert type(category) == Category
+
+    key_name = self.get_key_name(user.email, category.name)
+    if 'key_name' in kwargs:
+      assert kwargs['key_name'] == key_name
+      db.Model.__init__(self, **kwargs)
+    else:
+      db.Model.__init__(self, key_name=key_name, **kwargs)
     
-    db.Model.__init__(self, key_name=key_name, **kwargs)
+  @classmethod
+  def get_key_name(cls, user_email, category_name):
+    return '%s//%s' % (user_email, category_name)
   
