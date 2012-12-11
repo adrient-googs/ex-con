@@ -56,13 +56,20 @@ def tryAddingTwoOfTheSameCategory(out):
         continue
       out.write(' %.2i - "%s"\n' % (ii, category.name))
     out.write('Found %i categories.\n' % len(categories))    
-  
-  printAllWithName()  
-  for ii in xrange(10):
+    
+  def putNewWithName():
+    """Puts in a new category with name = category_name"""
     new_category = Category(name=category_name)
     new_category.put()
     out.write('Put new category name=%s key=%s.\n' % (new_category.name, new_category.key()))
+
+  # add two wtih the same name
+  printAllWithName()  
+  putNewWithName()
+  putNewWithName()
   printAllWithName()
+
+  # make sure that they're not separately in the datastore
   if len(Category.all().filter('name =', category_name).fetch(limit=100)) == 1:
     out.write('TEST PASSED\n')
   else:
@@ -71,13 +78,31 @@ def tryAddingTwoOfTheSameCategory(out):
 @handlers.text_handler
 def addDefaultUsers(out):
   """Adds a bunch of users to the system."""
-  pass
+  new_emails = [
+    'charleschen@google.com',
+    'karishmashah@google.com',
+    'adrient@google.com',
+  ]
+  for new_email in new_emails:
+    new_user = User.get_or_insert(new_email, email=new_email)
+    out.write('Got user "%s"\n' % new_user.email)
+    new_user.add_category('cooking')
+    for category in new_user.get_categories():
+      out.write(' - %s\n' % category.name)
+
+@handlers.text_handler
+def quickDisplayCategories(out):
+  for category in Category.all():
+    out.write('- %s\n' % category.name)
+    for user in category.get_experts():
+      out.write('  - %s\n' % user.email)
 
 # This is is a list of functions which the administrator can call.
 ADMIN_FUNCS = (
   ('addDefaultCategories',          'Add some default categories'),
   ('tryAddingTwoOfTheSameCategory', 'Run a test to verify that catgories are unique'),
   ('addDefaultUsers',               'Adds Karishma, Charles, and Adrien as users'),
+  ('quickDisplayCategories',        'Displays all categories.'),
 )
         
 def getHandlers():

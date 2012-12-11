@@ -40,7 +40,12 @@ class LatestHandler(webapp.RequestHandler):
     self.response.out.write(template.render(path, template_values))
 
   def get(self):
-    self.Render("latest.html", {})
+    categories = []
+    for category in Category.all():
+      categories.append((category, tuple(category.get_experts())))
+    self.Render("latest.html", {
+      'categories' : tuple(categories),
+    })
 
 class ManageAccountHandler(webapp.RequestHandler):
   """Presents a page for the user to sign up for expert categories."""
