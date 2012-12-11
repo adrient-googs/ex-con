@@ -13,6 +13,16 @@ def example_template_handler():
   }
 """
 
+from google.appengine.ext import db
+from google.appengine.ext import webapp
+from google.appengine.ext.webapp import template
+
 def text_handler(func):
-  """Returns a handler"""
+  """Returns a handler which outputs plain text in func(out)."""
+  class TextHandler(webapp.RequestHandler):
+    def get(self):
+      self.response.headers['Content-Type'] = 'text/plain'
+      func(self.response.out)
+  return TextHandler
+  
   

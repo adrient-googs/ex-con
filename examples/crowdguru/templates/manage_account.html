@@ -6,5 +6,11 @@
 <body>
   <h1>Account Management</h1>
 
+  <ul>
+  {% for category in categories %}
+    <li>{{category.name}}</li>
+  {% endfor %}
+  </ul>
+
 </body>
 </html>
