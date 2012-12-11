@@ -90,7 +90,7 @@ def addDefaultUsers(out):
     new_user.put()
     # out.write('Got user "%s"\n' % new_user.email)
     # out.write('Added profile pic: "%s"\n' % new_user.profile_pic)
-    # new_user.add_category('cooking')
+    new_user.add_category('cooking')
     # for category in new_user.get_categories():
     #   out.write(' - %s\n' % category.name)
 

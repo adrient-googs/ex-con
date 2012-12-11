@@ -32,6 +32,11 @@ font-size: 2em;
 color: rgb(211, 52, 43);
 }
 
+span#account {
+	font-size:0.9em;
+	float: right;
+}
+
 /* The Expert Listing Page */
 
 div#expertlist {
