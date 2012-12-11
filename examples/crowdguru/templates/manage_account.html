@@ -5,6 +5,10 @@
 </head>
 <body>
   <h1>Account Management</h1>
-
+  <ul>
+    {% for category in categories %}
+      <li>{{category.category}}</li>
+    {% endfor %}
+  </ul>
 </body>
 </html>
