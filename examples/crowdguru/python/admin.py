@@ -41,14 +41,17 @@ def addDefaultCategories(out):
 @handlers.text_handler
 def addDefaultUsers(out):
   """Adds a bunch of users to the system."""
+  pass
 
-
+# This is is a list of functions which the administrator can call.
+ADMIN_FUNCTIONS = [
+  ('addDefaultCategories', 'Add some default categories'),
+  ('addDefaultUsers',      'Adds Karishma, Charles, and Adrien as users'),
+]
         
 def getHandlers():
   """Returns the handlers defined in this module."""
-  return [
-    ('/admin/admin', AdminHandler),
-    ('/admin/addDefaultCategories', addDefaultCategories),
-    ('/admin/addDefaultUsers', addDefaultUsers),
-  ]
+  handlers = [('/admin', AdminHandler)]
+  for name, description in ADMIN_FUNCTIONS:
+    handlers.append(('/admin/%s' % name, globals()[name]))
   
