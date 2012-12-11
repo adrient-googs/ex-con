@@ -23,7 +23,7 @@ class AdminHandler(webapp.RequestHandler):
     self.Render('admin.html', ())
 
 @handlers.text_handler
-def AdminAddDefaultCategories(out):
+def addDefaultCategories(out):
  DEFAULT_CATEGORIES = [
    'computer help', 'cooking', 'homework', 'romance', 'appliance repair',
    'fitness', 'games', 'beauty and fashion', 'arts and crafts', 'handyman',
@@ -37,11 +37,18 @@ def AdminAddDefaultCategories(out):
      category = Category(name=category_name)
      category.put()
      out.write('% 20s - created!\n' % category_name)
+     
+@handlers.text_handler
+def addDefaultUsers(out):
+  """Adds a bunch of users to the system."""
+
+
         
 def getHandlers():
   """Returns the handlers defined in this module."""
   return [
     ('/admin/admin', AdminHandler),
-    ('/admin/addDefaultCategories', AdminAddDefaultCategories),
+    ('/admin/addDefaultCategories', addDefaultCategories),
+    ('/admin/addDefaultUsers', addDefaultUsers),
   ]
   
