@@ -7,8 +7,9 @@
   <h1>ExCon Amin</h1>
 
   <ul>
-    <li><a href="/admin/addDefaultCategories">Add some default categories</a>.</li>
-    <li><a href="/admin/addDefaultUsers">Adds Karishma, Charles, and Adrien as users.</a>.</li>
+    {% for func in adminFuncs %}
+      <li><a href="/admin/{{ func.0 }}">{{ func.1 }}</a>.</li>
+    {% endfor %}
   </ul>
 
 </body>
