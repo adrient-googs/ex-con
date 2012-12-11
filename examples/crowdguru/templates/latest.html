@@ -19,9 +19,21 @@
   <!-- this is where we see a list of experts -->
   <div id="expertlist">
     {% for category_pair in categories %}
-      <div><b>{{ category_pair.0.name }}</b></div>
+      <!-- write out the category -->
+      <div class="category">
+        {{ category_pair.0.name|title }}
+      </div>
+            
+      <!-- write out the experts with this category -->
       {% for user in category_pair.1 %}
-        <div>- {{ user.email }}</div>
+        <div class="expert">
+          <a href="/connect?user={{user.email}}">
+            <img class="hangout" src="/static/hangout-button.png"/>
+          </a>
+          <img class="profile" src="{{user.profile_pic}}"/>
+          <div class="username">{{ user.email }}</div>
+          <div class="status">available</div>
+        </div>
       {% endfor %}
     {% endfor %}
   </div>
@@ -50,7 +62,7 @@
       <li>{{user.show}}</li>
       <li>{{user.show_time}}</li>
     <li>{{user.available}}</li>
-    <li><a href="/connect?user={{user.user}}">Hangout</a></li>
+    <li>
     {% endfor %}
   </ul> -->
 </body>

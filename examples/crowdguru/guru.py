@@ -42,7 +42,9 @@ class LatestHandler(webapp.RequestHandler):
   def get(self):
     categories = []
     for category in Category.all():
-      categories.append((category, tuple(category.get_experts())))
+      experts = tuple(category.get_experts())
+      if experts:
+        categories.append((category, experts))
     self.Render("latest.html", {
       'categories' : tuple(categories),
     })
@@ -107,7 +109,7 @@ class ConnectHandler(webapp.RequestHandler):
         self.response.out.write("<html><body><p>No such user</p></body></html>")
         logging.error('Connect request to invalid user ' + user)
     url = 'https://plus.google.com/hangouts/_/2e3e57ff748dd2c7c79e1c40c274cca933a8d984?authuser=0&hl=en-US'
-    xmpp.send_message(u.user, REQUEST_MSG % (url,))
+    xmpp.send_message(u.email, chat.REQUEST_MSG % (url,))
     self.redirect(url)
 
 def main():

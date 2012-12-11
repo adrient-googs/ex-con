@@ -78,17 +78,21 @@ def tryAddingTwoOfTheSameCategory(out):
 @handlers.text_handler
 def addDefaultUsers(out):
   """Adds a bunch of users to the system."""
-  new_emails = [
-    'charleschen@google.com',
-    'karishmashah@google.com',
-    'adrient@google.com',
+  new_users = [
+    ('charleschen@google.com', "https://teams.googleplex.com/_servlet/data/person_photo?personId=P791347397"),
+    ('karishmashah@google.com', 'https://teams.googleplex.com/_servlet/data/person_photo?personId=P1064040024'),
+    ('adrient@google.com', 'https://teams.googleplex.com/_servlet/data/person_photo?personId=P1004388490'),
   ]
-  for new_email in new_emails:
+  for new_email, profile_pic in new_users:
     new_user = User.get_or_insert(new_email, email=new_email)
-    out.write('Got user "%s"\n' % new_user.email)
-    new_user.add_category('cooking')
-    for category in new_user.get_categories():
-      out.write(' - %s\n' % category.name)
+    out.write('adding new user: %s / %s\n' % (new_email, profile_pic))
+    new_user.profile_pic = profile_pic
+    new_user.put()
+    # out.write('Got user "%s"\n' % new_user.email)
+    # out.write('Added profile pic: "%s"\n' % new_user.profile_pic)
+    # new_user.add_category('cooking')
+    # for category in new_user.get_categories():
+    #   out.write(' - %s\n' % category.name)
 
 @handlers.text_handler
 def quickDisplayCategories(out):

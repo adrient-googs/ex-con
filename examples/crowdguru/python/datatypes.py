@@ -21,6 +21,7 @@ class User(db.Model):
   show_time = db.DateTimeProperty()
   available = db.BooleanProperty()
   mute_time = db.DateTimeProperty()
+  profile_pic = db.LinkProperty(default='https://teams.googleplex.com/_servlet/data/person_photo?personId=P1004388490')
   
   def __init__(self, *args, **kwargs):
     """Constructor."""
