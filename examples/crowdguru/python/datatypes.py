@@ -28,7 +28,7 @@ class UserToCategory(db.Model):
   def __init__(self, *args, **kwargs):
     """Constructor."""
     # make the user/category pair unique
-    key_name = '%s//%s' % (kwargs['user'].key(), kwargs['category'].key())
+    key_name = '%s//%s' % (kwargs['user'].key().name(), kwargs['category'].key().name())
     
     db.Model.__init__(self, key_name=key_name, **kwargs)
   

@@ -4,13 +4,18 @@
   <link rel="stylesheet" type="text/css" href="/static/base.css" />
 </head>
 <body>
-  <h1>Account Management</h1>
+  <h1>Account Management for {{email}}</h1>
 
-  <ul>
+	<a href={{logout}}>Logout of account</a>
+  <form method="POST" action="/manageAccount">
   {% for category in categories %}
-    <li>{{category.name}}</li>
+    <input type="checkbox" name="{{category.name}}" value="true"
+		{% if category.checked %}
+			checked
+		{% endif %}>{{category.name}}<br>
   {% endfor %}
-  </ul>
+	<input type="submit">
+  </form>
 
 </body>
 </html>
