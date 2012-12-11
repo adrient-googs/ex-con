@@ -13,121 +13,118 @@
  * limitations under the License.
  */
 
-body {
-  background-color: white;
-  color: black;
-  margin: 10px;
-  font-family: Helvetica, sans-serif;
+/* body {*/
+background-color: white;
+color: black;
+margin: 10px;
+font-family: Helvetica, sans-serif;
 }
 
 /* The title bar */
 
 div#titlebar {
-  margin-bottom: 20px;
+margin-bottom: 20px;
 /*  background-color: red;*/
 }
 
 span#title {
-  font-size: 2em;
-  color: rgb(211, 52, 43);
+font-size: 2em;
+color: rgb(211, 52, 43);
 }
 
 /* The Expert Listing Page */
 
 div#expertlist {
-  width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
-/*  background-color: red;*/
+width: 1100px;
+margin-left: auto;
+margin-right: auto;
+/*background-color: red;*/
 }
 
 div#expertlist div.category {
-  font-size: 1.3em;
-  padding: 3px;
+font-size: 1.3em;
+padding: 3px;
 /*  font-weight: bold;*/
   color: rgb(60, 60, 6 0);
-  margin-bottom: 10px;
-  width: 600px;
-  background-color: rgb(240, 240, 240);
+margin-bottom: 10px;
+width: 600px;
+background-color: rgb(240, 240, 240);
 }
 
 div#expertlist div.expert {
-  position: relative;
-  
-  height: 50px;
-  width: 100%;
-  margin-left: 10px;
-  margin-bottom: 10px;
+position: relative;
+height: 50px;
+width: 100%;
+margin-left: 10px;
+margin-bottom: 10px;
   
   /* use this for debugging purposes */
 /*  background-color: gray;*/
 }
 
 div#expertlist div.expert img.hangout {
-  position: absolute;
-  left: 0px;
-
-  top: 5px;
-  height: 33px;
+position: absolute;
+left: 0px;
+top: 5px;
+height: 33px;
 }
 
 div#expertlist div.expert img.profile {
-  position: absolute;
-  left: 88px;
-  top: 0px;
-  
-  height: 43px;
+position: absolute;
+left: 88px;
+top: 0px;
+height: 43px;
 }
 
 div#expertlist div.expert div.username {
-  position: absolute;
-  left: 132px;
-  top: 0px;
-  font-size: 1.25em;
+position: absolute;
+left: 132px;
+top: 0px;
+font-size: 1.25em;
 
 /*  background-color: red;*/
 }
 
 div#expertlist div.expert div.status {
-  position: absolute;
-  left: 132;
-  top: 23px;
-  color: rgb(80,80,80);
-  font-size: 0.8em;
+position: absolute;
+left: 132;
+top: 23px;
+color: rgb(80,80,80);
+font-size: 0.8em;
 
 /*  background-color: green;*/
 }
 
 /*#body {
-  clear: both;
-  margin-left: 1em;
-  margin-top: 2em;
+clear: both;
+margin-left: 1em;
+margin-top: 2em;
 }
 
 dt:before, dd:before {
-  font-weight: bold;
-  padding-right: 0.5em;
-  font-size: 1.2em;
+font-weight: bold;
+padding-right: 0.5em;
+font-size: 1.2em;
 }
 
 dt:before {
-  content: "Q";
+content: "Q";
 }
 
 dd:before {
-  content: "A";
+content: "A";
 }
 
 dt, dd {
-  margin-left: 1em;
+margin-left: 1em;
 }
 
 dd {
-  margin-bottom: 1em;
+margin-bottom: 1em;
 }
 
 th {
-  width: 10em;
-  text-align: left;
+width: 10em;
+text-align: left;
 }
 */
