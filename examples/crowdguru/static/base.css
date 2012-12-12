@@ -40,8 +40,14 @@ font-size: 2em;
 }
 
 span#account {
+	display: inline-block;
 	font-size:0.9em;
 	float: right;
+	text-align: right;
+}
+
+span#accountdetails {
+	display: inline-block;
 }
 
 /* The Expert Listing Page */
@@ -118,6 +124,10 @@ input.submitbutton {
   -webkit-border-radius: 4px;
 	width: 100px;
 	height: 30px;
+}
+
+img.profilepic {
+	vertical-align: middle;
 }
 
 /*#body {

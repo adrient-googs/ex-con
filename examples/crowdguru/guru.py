@@ -19,6 +19,7 @@ import re
 import sys
 import wsgiref.handlers
 
+from google.appengine.api import memcache
 from google.appengine.api import users
 from google.appengine.api import xmpp
 from google.appengine.ext import db
@@ -30,7 +31,51 @@ from google.appengine.ext.webapp import template
 sys.path.append(os.path.join(os.path.dirname(__file__), 'python'))
 import admin
 import chat
+import httplib2
+from apiclient.discovery import build
+from apiclient.discovery import build_from_document
 from datatypes import Category, User, UserToCategory
+from oauth2client.appengine import oauth2decorator_from_clientsecrets
+from oauth2client.client import AccessTokenRefreshError
+
+DEV_SERVER = os.environ['SERVER_SOFTWARE'].find('Development') >= 0
+
+# CLIENT_SECRETS, name of a file containing the OAuth 2.0 information for this
+# application, including client_id and client_secret, which are found
+# on the API Access tab on the Google APIs
+# Console <http://code.google.com/apis/console>
+CLIENT_SECRETS = os.path.join(os.path.dirname(__file__), 'client_secrets_installed.json' if DEV_SERVER else 'client_secrets.json')
+
+# Helpful message to display in the browser if the CLIENT_SECRETS file
+# is missing.
+MISSING_CLIENT_SECRETS_MESSAGE = """
+<h1>Warning: Please configure OAuth 2.0</h1>
+<p>
+To make this sample run you will need to populate the client_secrets.json file
+found at:
+</p>
+<p>
+<code>%s</code>.
+</p>
+<p>with information found on the <a
+href="https://code.google.com/apis/console">APIs Console</a>.
+</p>
+""" % CLIENT_SECRETS
+
+
+http = httplib2.Http(memcache)
+# Load the local copy of the discovery document
+f = file(os.path.join(os.path.dirname(__file__), "plus.v1whitelisted.rest.json"), "r")
+discovery_doc = f.read()
+f.close()
+
+service = build_from_document(discovery_doc, base="https://www.googleapis.com/", http=http)
+# service = build("plus", "v1", http=http)
+# service = build("plus", "dogfood", http=http, discoveryServiceUrl='https://www-googleapis-staging.sandbox.google.com/discovery/v1/apis/plus/dogfood/rest')
+decorator = oauth2decorator_from_clientsecrets(
+    CLIENT_SECRETS,
+    scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/plus.profiles.read https://www.googleapis.com/auth/userinfo.profile',
+    message=MISSING_CLIENT_SECRETS_MESSAGE)
 
 class LatestHandler(webapp.RequestHandler):
   """Displays the most recently answered questions."""
@@ -46,7 +91,9 @@ class LatestHandler(webapp.RequestHandler):
       if experts:
         categories.append((category, experts))
     self.Render("latest.html", {
-      'categories' : tuple(categories),
+      'categories': tuple(categories),
+      'login': users.create_login_url("/"),
+      'logout': users.create_logout_url("/"),
     })
 
 class ManageAccountHandler(webapp.RequestHandler):
@@ -56,6 +103,7 @@ class ManageAccountHandler(webapp.RequestHandler):
     path = os.path.join(os.path.dirname(__file__), 'templates', template_file)
     self.response.out.write(template.render(path, template_values))
 
+  @decorator.oauth_required
   def get(self):
     user = users.get_current_user()
     if user == None:
@@ -63,8 +111,16 @@ class ManageAccountHandler(webapp.RequestHandler):
       return
     u = User.get_by_key_name(user.email())
     if u == None:
-      u = User(email=user.email())
-      u.put()
+      try:
+        u = User(email=user.email())
+        http = decorator.http()
+        me = service.people().get(userId='me').execute(http=http)
+        logging.error(me)
+        u.profile_pic = me['image']['url']
+        u.name = me['displayName']
+        u.put()
+      except AccessTokenRefreshError:
+        self.redirect('/')
     existing_categories = []
     display_categories = []
     for category in u.get_categories():
@@ -77,7 +133,9 @@ class ManageAccountHandler(webapp.RequestHandler):
     template_values = {
       'categories': display_categories,
       'email': user.email(),
-      'logout': users.create_logout_url("/")
+      'profile_pic': u.profile_pic,
+      'name': u.name,
+      'logout': users.create_logout_url("/"),
     }
     self.Render("manage_account.html", template_values)
     
@@ -117,6 +175,7 @@ def main():
       ('/', LatestHandler),
       ('/manageAccount', ManageAccountHandler),
       ('/connect', ConnectHandler),
+      (decorator.callback_path, decorator.callback_handler()),
   ]
   for module in (admin, chat):
     handlers += module.getHandlers()

@@ -17,6 +17,7 @@ class Category(db.Model):
     
 class User(db.Model):
   email = db.StringProperty(required=True)
+  name = db.StringProperty()
   show = db.StringProperty()
   show_time = db.DateTimeProperty()
   available = db.BooleanProperty()

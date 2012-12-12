@@ -27,16 +27,18 @@ class AdminHandler(webapp.RequestHandler):
 
 @handlers.text_handler
 def addDefaultCategories(out):
- DEFAULT_CATEGORIES = [
-   'computer help', 'cooking', 'homework', 'romance', 'appliance repair',
-   'fitness', 'games', 'beauty and fashion', 'arts and crafts', 'handyman',
-   'employment', 'finance', 'translate', 'programming', 'pets', 'household',
-   'gardening', 'cars', 'religion', 'parenting', 'outdoors', 'legal', 'hardware']
- existing_categories = {category.name for category in Category.all()}
- for category_name in DEFAULT_CATEGORIES:
-   if category_name in existing_categories:
-     out.write('% 20s - already exists\n' % category_name)
-   else:
+  """Adds default categories for the appengine datastore."""
+  DEFAULT_CATEGORIES = [
+    'computer help', 'cooking', 'homework', 'romance', 'appliance repair',
+    'fitness', 'games', 'beauty and fashion', 'arts and crafts', 'handyman',
+    'employment', 'finance', 'translate', 'programming', 'pets', 'household',
+    'gardening', 'cars', 'religion', 'parenting', 'outdoors', 'legal', 'hardware']
+
+  # existing_categories = {category.name for category in Category.all().fetch(limit=100)}
+  for category_name in DEFAULT_CATEGORIES:
+     # if category_name in existing_categories:
+     #   out.write('% 20s - already exists\n' % category_name)
+     # else:
      category = Category(name=category_name)
      category.put()
      out.write('% 20s - created!\n' % category_name)

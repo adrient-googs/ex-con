@@ -1,4 +1,4 @@
-application: expert-connect #google.com:expert
+application: google.com:expert
 version: 2
 runtime: python
 api_version: 1
