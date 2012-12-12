@@ -100,6 +100,19 @@ font-size: 0.8em;
 /*  background-color: green;*/
 }
 
+input.submitbutton {
+  border: 1px solid #777777;
+  background: #4D90FE;
+  color: white;
+	font: 1.2em;
+  padding: 4px;
+  cursor: pointer;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+	width: 100px;
+	height: 30px;
+}
+
 /*#body {
 clear: both;
 margin-left: 1em;

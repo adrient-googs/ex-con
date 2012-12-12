@@ -32,7 +32,13 @@
           </a>
           <img class="profile" src="{{user.profile_pic}}"/>
           <div class="username">{{ user.email }}</div>
-          <div class="status">available</div>
+          <div class="status">
+						{% if user.available %}
+						  available
+						{% else %}
+						  unavailable
+						{% endif %}
+          </div>
         </div>
       {% endfor %}
     {% endfor %}

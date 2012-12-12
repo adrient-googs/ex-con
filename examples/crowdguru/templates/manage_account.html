@@ -25,7 +25,7 @@
     <input class="checkbox" type="checkbox" name="{{category.name}}" value="true"
 		{% if category.checked %}
 			checked
-		{% endif %}>{{category.name}}<br>
+		{% endif %}>{{category.name|title}}<br>
   {% endfor %}
 	<input class="submitbutton" type="submit">
   </form>
