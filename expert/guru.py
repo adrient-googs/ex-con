@@ -77,8 +77,8 @@ decorator = oauth2decorator_from_clientsecrets(
     scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/plus.profiles.read https://www.googleapis.com/auth/userinfo.profile',
     message=MISSING_CLIENT_SECRETS_MESSAGE)
 
-class LatestHandler(webapp.RequestHandler):
-  """Displays the most recently answered questions."""
+class MainHandler(webapp.RequestHandler):
+  """Main landing page that shows available experts/categories."""
 
   def Render(self, template_file, template_values):
     path = os.path.join(os.path.dirname(__file__), 'templates', template_file)
@@ -90,7 +90,7 @@ class LatestHandler(webapp.RequestHandler):
       experts = tuple(category.get_experts())
       if experts:
         categories.append((category, experts))
-    self.Render("latest.html", {
+    self.Render("main.html", {
       'categories': tuple(categories),
       'login': users.create_login_url("/"),
       'logout': users.create_logout_url("/"),
@@ -116,20 +116,17 @@ class ManageAccountHandler(webapp.RequestHandler):
         http = decorator.http()
         me = service.people().get(userId='me').execute(http=http)
         logging.error(me)
-        u.profile_pic = me['image']['url']
-        u.name = me['displayName']
+        if me.get('image') and me['image'].get('url'):          
+          u.profile_pic = me['image']['url']
+        if me.get('displayName'):
+          u.name = me['displayName']
+        if me.get('url'):
+          u.plus_page = me['url']
         u.put()
       except AccessTokenRefreshError:
         self.redirect('/')
-    existing_categories = []
-    display_categories = []
-    for category in u.get_categories():
-      existing_categories.append(category.key().name())
-    for category in Category.all().fetch(100):
-      if category.key().name() in existing_categories:
-        display_categories.append({'checked': True, 'name': category.name})
-      else:
-        display_categories.append({'checked': False, 'name': category.name})
+    existing_categories = [category.key().name() for category in u.get_categories()]
+    display_categories = [{'checked': category.key().name() in existing_categories, 'name': category.name} for category in Category.all().fetch(100)]
     template_values = {
       'categories': display_categories,
       'email': user.email(),
@@ -172,7 +169,7 @@ class ConnectHandler(webapp.RequestHandler):
 
 def main():
   handlers = [
-      ('/', LatestHandler),
+      ('/', MainHandler),
       ('/manageAccount', ManageAccountHandler),
       ('/connect', ConnectHandler),
       (decorator.callback_path, decorator.callback_handler()),

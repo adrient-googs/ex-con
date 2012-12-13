@@ -2,6 +2,10 @@
 Contains all request handlers for chat.
 """
 
+import datetime
+import logging
+
+from datatypes import Category, User, UserToCategory
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import xmpp_handlers
