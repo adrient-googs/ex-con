@@ -1,0 +1,66 @@
+<html>
+<head>
+  <title>Expert Connect</title>
+  <link rel="stylesheet" type="text/css" href="/static/base.css"/>
+</head>
+
+<body>
+  <!-- the title bar at the top of the screen -->
+  <div id="titlebar">
+
+    <!-- title of the app -->
+    <span id="title">Expert Connect</span>
+    
+    <!-- options that the user has -->
+    <span id="options">
+    </span>
+		
+		<span id="account">
+			<a href="/manageAccount">Account Management</a>
+		</span>
+  </div>
+  
+  <!-- this is where we see a list of experts -->
+  <div id="expertlist">
+    {% for category_pair in categories %}
+      <!-- write out the category -->
+      <div class="category">
+        {{ category_pair.0.name|title }}
+      </div>
+            
+      <!-- write out the experts with this category -->
+      {% for user in category_pair.1 %}
+        <div class="expert">
+					<div class="picturecolumn">
+						<img class="profile" src="{{user.profile_pic}}"/>
+					</div>
+					<div class="detailcolumn">
+	          <div class="username">
+							{% if user.name %}
+								{{ user.name }}
+							{% else %}
+								{{ user.email }}
+							{% endif %}</div>
+	          <div class="status">
+							<img src="/static/cleardot.gif" class=
+								"{% if user.available %}
+									avail
+								{% else %}
+									unavail
+								{% endif %}">
+							{% if user.available %}
+							  available
+							{% else %}
+							  unavailable
+							{% endif %}
+	          </div>
+					</div>
+          <a class="hangoutlink" href="/connect?user={{user.email}}">
+            <img class="hangout" src="/static/hangout-button.png"/>
+          </a>
+        </div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+</body>
+</html>
