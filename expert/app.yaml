@@ -11,6 +11,10 @@ handlers:
   login: required
   script: guru.py
 
+- url: /signUp
+  login: required
+  script: guru.py
+
 - url: /admin/.*
   login: admin
   script: guru.py
@@ -21,6 +25,7 @@ handlers:
 
 
 inbound_services:
+- xmpp_error
 - xmpp_message
 - xmpp_presence
 - xmpp_subscribe

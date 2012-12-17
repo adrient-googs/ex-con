@@ -1,0 +1,40 @@
+<html>
+<head>
+  <title>Account Management</title>
+  <link rel="stylesheet" type="text/css" href="/static/base.css" />
+</head>
+<body>
+  <!-- the title bar at the top of the screen -->
+  <div id="titlebar">
+
+    <!-- title of the app -->
+    <span id="title">Account Management - Add Expertise</span>
+    
+    <!-- options that the user has -->
+    <span id="options">
+    </span>
+		
+		<span id="account">
+			<span id="accountdetails">
+			  {{email}}
+				<br>
+				<a href={{logout}}>Logout</a>
+			</span>
+			<img class="profilepic" src="{{profile_pic}}">
+		</span>
+  </div>
+
+	<div class="centercolumn">
+	  <form method="POST" action="/manageAccount/addExpertise">
+	  {% for category in all_categories %}
+	    <input class="checkbox" type="checkbox" name="{{category.name}}" value="true"
+			{% if category.checked %}
+				checked
+			{% endif %}>{{category.name|title}}<br>
+	  {% endfor %}
+		<input class="submitbutton" type="submit">
+	  </form>
+	</div>
+
+</body>
+</html>

@@ -20,10 +20,12 @@ class User(db.Model):
   name = db.StringProperty()
   show = db.StringProperty()
   show_time = db.DateTimeProperty()
-  available = db.BooleanProperty()
+  is_available = db.BooleanProperty()
   mute_time = db.DateTimeProperty()
   profile_pic = db.LinkProperty(default='https://teams.googleplex.com/_servlet/data/person_photo?personId=P1004388490')
   plus_page = db.LinkProperty()
+  is_subscribed = db.BooleanProperty()
+  is_expert = db.BooleanProperty()
   
   def __init__(self, *args, **kwargs):
     """Constructor."""
@@ -48,7 +50,8 @@ class User(db.Model):
 
 class UserToCategory(db.Model):
   user = db.ReferenceProperty(User, required=True)
-  category = db.ReferenceProperty(Category, required=True)  
+  category = db.ReferenceProperty(Category, required=True)
+  detail = db.StringProperty()
   
   def __init__(self, *args, **kwargs):
     """Constructor."""

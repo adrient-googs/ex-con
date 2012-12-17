@@ -234,6 +234,11 @@ class XmppSubscribedHandler(webapp.RequestHandler):
 
   def post(self):
     sender = self.request.get('from').split('/')[0]
+    u = User.get_by_key_name(sender)
+    if u == None:
+      u = User(email=sender)
+    u.is_subscribed = True
+    u.put()
     logging.info('User subscribed ' + sender)
     logging.info('stanza ' + self.request.get('stanza'))
     logging.info('body ' + self.request.get('body'))
@@ -252,10 +257,12 @@ class XmppAvailableHandler(webapp.RequestHandler):
 
   def post(self):
     sender = self.request.get('from').split('/')[0]
-    u = User.get_or_insert(sender)
+    u = User.get_by_key_name(sender)
+    if u == None:
+      u = User(email=sender)
     u.show = self.request.get('show')
     u.show_time = datetime.datetime.now()
-    u.available = True
+    u.is_available = True
     u.put()
     logging.info('User available ' + sender)
     logging.info('stanza ' + self.request.get('stanza'))
@@ -269,8 +276,10 @@ class XmppUnavailableHandler(webapp.RequestHandler):
 
   def post(self):
     sender = self.request.get('from').split('/')[0]
-    u = User.get_or_insert(sender)
-    u.available = False
+    u = User.get_by_key_name(sender)
+    if u == None:
+      u = User(email=sender)
+    u.is_available = False
     u.put()
     logging.info('User unavailable ' + sender)
     logging.info('stanza ' + self.request.get('stanza'))
@@ -285,9 +294,18 @@ class XmppProbeHandler(webapp.RequestHandler):
     logging.info('stanza ' + self.request.get('stanza'))
     logging.info('body ' + self.request.get('body'))
 
+class XmppErrorHandler(webapp.RequestHandler):
+  """Handles xmpp errors."""
+
+  def post(self):
+    error_sender = self.request.get('from')
+    error_stanza = self.request.get('stanza')
+    logging.error('XMPP error received from %s (%s)', error_sender, error_stanza)
+
 def getHandlers():
   """Returns the handlers defined in this module."""
   return [
+    ('/_ah/xmpp/error/', XmppErrorHandler),
     ('/_ah/xmpp/message/chat/', XmppHandler),
     ('/_ah/xmpp/subscription/subscribe/', XmppSubscribeHandler),
     ('/_ah/xmpp/subscription/subscribed/', XmppSubscribedHandler),

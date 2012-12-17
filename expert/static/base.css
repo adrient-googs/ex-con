@@ -51,13 +51,13 @@ span#accountdetails {
 
 /* The Expert Listing Page */
 
-div#expertlist {
+div.centercolumn {
 	margin-left: auto;
 	margin-right: auto;
 	width: 600px;
 }
 
-div#expertlist div.category {
+div.centercolumn div.category {
 	background-color: rgb(240, 240, 240);
   color: rgb(60, 60, 6 0);
 	font-size: 1.3em;
@@ -65,46 +65,60 @@ div#expertlist div.category {
 	padding: 3px;
 }
 
-div#expertlist div.expert {
+div.centercolumn div.add {
+	text-align: center;
+}
+
+div.centercolumn div.expert {
 	height: 50px;
 	margin-left: 10px;
 	margin-bottom: 10px;
 	position: relative;
 }
 
-div#expertlist div.expert a.hangoutlink {
+div.centercolumn div.expert a.hangoutlink {
 	float: right;
 	position: relative;
 }
 
-div#expertlist div.expert img.hangout {
-	height: 33px;
+div.centercolumn div.expert img.hangout {
+	height: 20px;
 	left: 0px;
 	top: 5px;
+	width: 86px;
 }
 
-div#expertlist div.expert div.picturecolumn {
+div.centercolumn div.expert div.picturecolumn {
 	float: left;
 	position: relative;
 	width: 50px;
 }
 
-div#expertlist div.expert img.profile {
+div.centercolumn div.expert img.profile {
 	height: 43px;
 }
 
-div#expertlist div.expert div.detailcolumn {
+div.centercolumn div.expert div.detailcolumn {
 	float: left;
 	position: relative;
 }
 
-div#expertlist div.expert div.username {
+div.centercolumn div.expert div.username {
 	font-size: 1.25em;
 }
 
-div#expertlist div.expert div.status {
+div.centercolumn div.expert div.status {
 	color: rgb(80,80,80);
 	font-size: 0.8em;
+}
+
+div.warning {
+	color: red;
+	margin-bottom: 20px;
+}
+
+div.indent {
+	margin-left: 20px;
 }
 
 input.submitbutton {
@@ -118,6 +132,12 @@ input.submitbutton {
 	width: 100px;
   -moz-border-radius: 4px;
   -webkit-border-radius: 4px;
+}
+
+img#invitetochat {
+	display: block;
+	margin-left: auto;
+	margin-right: auto 
 }
 
 img.profilepic {

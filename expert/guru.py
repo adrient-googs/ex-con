@@ -85,18 +85,68 @@ class MainHandler(webapp.RequestHandler):
     self.response.out.write(template.render(path, template_values))
 
   def get(self):
+    is_expert = False
+    user = users.get_current_user()
+    if user != None:
+      u = User.get_by_key_name(user.email())
+      if u != None:
+        is_expert = u.is_expert
     categories = []
     for category in Category.all():
       experts = tuple(category.get_experts())
       if experts:
         categories.append((category, experts))
     self.Render("main.html", {
+      'is_expert': is_expert,
       'categories': tuple(categories),
       'login': users.create_login_url("/"),
       'logout': users.create_logout_url("/"),
     })
 
 class ManageAccountHandler(webapp.RequestHandler):
+  """Presents an account summary page."""
+
+  def Render(self, template_file, template_values):
+    path = os.path.join(os.path.dirname(__file__), 'templates', template_file)
+    self.response.out.write(template.render(path, template_values))
+
+  @decorator.oauth_required
+  def get(self):
+    user = users.get_current_user()
+    if user == None:
+      self.redirect(users.create_login_url("/manageAccount"))
+      return
+    u = User.get_by_key_name(user.email())
+    if u == None:
+      self.redirect('/signUp')
+    if not u.is_expert:
+      try:
+        http = decorator.http()
+        me = service.people().get(userId='me').execute(http=http)
+        logging.error(me)
+        if me.get('image') and me['image'].get('url'):          
+          u.profile_pic = me['image']['url']
+        if me.get('displayName'):
+          u.name = me['displayName']
+        if me.get('url'):
+          u.plus_page = me['url']
+        u.is_expert = True
+        u.put()
+      except AccessTokenRefreshError:
+        self.redirect('/manageAccount')
+    user_listed_categories = [category.key().name() for category in u.get_categories()]
+    template_values = {
+      'empty_list': len(user_listed_categories) == 0,
+      'user_listed_categories': user_listed_categories,
+      'email': user.email(),
+      'profile_pic': u.profile_pic,
+      'name': u.name,
+      'logout': users.create_logout_url("/"),
+      'subscribed': u.is_subscribed,
+    }
+    self.Render("manage_account.html", template_values)
+
+class AddExpertiseHandler(webapp.RequestHandler):
   """Presents a page for the user to sign up for expert categories."""
 
   def Render(self, template_file, template_values):
@@ -111,30 +161,19 @@ class ManageAccountHandler(webapp.RequestHandler):
       return
     u = User.get_by_key_name(user.email())
     if u == None:
-      try:
-        u = User(email=user.email())
-        http = decorator.http()
-        me = service.people().get(userId='me').execute(http=http)
-        logging.error(me)
-        if me.get('image') and me['image'].get('url'):          
-          u.profile_pic = me['image']['url']
-        if me.get('displayName'):
-          u.name = me['displayName']
-        if me.get('url'):
-          u.plus_page = me['url']
-        u.put()
-      except AccessTokenRefreshError:
-        self.redirect('/')
-    existing_categories = [category.key().name() for category in u.get_categories()]
-    display_categories = [{'checked': category.key().name() in existing_categories, 'name': category.name} for category in Category.all().fetch(100)]
+      self.redirect(users.create_login_url("/manageAccount"))
+      return
+    user_listed_categories = [category.key().name() for category in u.get_categories()]
+    all_categories = [{'checked': category.key().name() in user_listed_categories, 'name': category.name} for category in Category.all().fetch(100)]
     template_values = {
-      'categories': display_categories,
+      'all_categories': all_categories,
       'email': user.email(),
       'profile_pic': u.profile_pic,
       'name': u.name,
       'logout': users.create_logout_url("/"),
+      'subscribed': u.is_subscribed,
     }
-    self.Render("manage_account.html", template_values)
+    self.Render("add_expertise.html", template_values)
     
   def post(self):
     user = users.get_current_user()
@@ -160,18 +199,55 @@ class ConnectHandler(webapp.RequestHandler):
   def get(self):
     user = self.request.get('user')
     u = User.get_by_key_name(user)
-    if u == None:
+    if u == None or not u.is_expert:
         self.response.out.write("<html><body><p>No such user</p></body></html>")
-        logging.error('Connect request to invalid user ' + user)
+        logging.error('Connect request to invalid user/expert ' + user)
     url = 'https://plus.google.com/hangouts/_/2e3e57ff748dd2c7c79e1c40c274cca933a8d984?authuser=0&hl=en-US'
     xmpp.send_message(u.email, chat.REQUEST_MSG % (url,))
     self.redirect(url)
 
+class SignUpHandler(webapp.RequestHandler):
+  """Sign up page for users to become an expert."""
+
+  def Render(self, template_file, template_values):
+    path = os.path.join(os.path.dirname(__file__), 'templates', template_file)
+    self.response.out.write(template.render(path, template_values))
+
+  @decorator.oauth_aware
+  def get(self):
+    user = users.get_current_user()
+    if user == None:
+      self.redirect(users.create_login_url("/signUp"))
+      return
+    u = User.get_by_key_name(user.email())
+    if u == None:
+      u = User(email=user.email())
+      u.put()
+    template_values = {
+      'url': decorator.authorize_url(),
+      'has_credentials': decorator.has_credentials()
+    }
+    self.Render("sign_up.html", template_values)
+
+class SendInviteHandler(webapp.RequestHandler):
+  """Sends an invite to the user account."""
+
+  def get(self):
+    user = users.get_current_user()
+    if user == None:
+      self.redirect(users.create_login_url("/signUp"))
+      return
+    xmpp.send_invite(user.email())
+    self.redirect("/signUp")
+
 def main():
   handlers = [
       ('/', MainHandler),
-      ('/manageAccount', ManageAccountHandler),
       ('/connect', ConnectHandler),
+      ('/manageAccount', ManageAccountHandler),
+      ('/manageAccount/addExpertise', AddExpertiseHandler),
+      ('/sendInvite', SendInviteHandler),
+      ('/signUp', SignUpHandler),
       (decorator.callback_path, decorator.callback_handler()),
   ]
   for module in (admin, chat):

@@ -1,0 +1,37 @@
+<html>
+<head>
+  <title>Sign Up</title>
+  <link rel="stylesheet" type="text/css" href="/static/base.css" />
+</head>
+<body>
+  <!-- the title bar at the top of the screen -->
+  <div id="titlebar">
+
+    <!-- title of the app -->
+    <span id="title">Sign Up</span>
+    
+    <!-- options that the user has -->
+    <span id="options">
+    </span>
+		
+  </div>
+
+	<div class="centercolumn">
+		<div>
+	    <p>Step 1: <a href="{{ url }}">Grant</a> Expert Connect permission to read your
+	    Google+ profile information.</p>
+	    {% if has_credentials %}
+		    <p>Step 2: Invite <b>xpertconnect@appspot.com</b> as a contact in Gchat.</p>
+				<img id="invitetochat" src="/static/invitetochat.png">
+		    <p>Step 2 (alternative): Allow expert connect to send you a message through Gchat when a user requires your expertise.<br>
+					<div class="indent">
+						<a href="/sendInvite">Invite</a> me to be a contact<br><br>
+						Accept the invitation<br>
+					</div>
+		    <p>Continue to the <a href="/manageAccount">account management</a> page and fill out your expertise!</p>
+	    {% endif %}
+		</div>
+	</div>
+
+</body>
+</html>

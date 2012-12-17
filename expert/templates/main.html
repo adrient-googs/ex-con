@@ -16,12 +16,16 @@
     </span>
 		
 		<span id="account">
-			<a href="/manageAccount">Account Management</a>
+			{% if is_expert %}
+				<a href="/manageAccount">Account Management</a>
+			{% else %}
+				<a href="/signUp">Sign up</a> to become an Expert!<br>
+			{% endif %}
 		</span>
   </div>
   
   <!-- this is where we see a list of experts -->
-  <div id="expertlist">
+  <div class="centercolumn">
     {% for category_pair in categories %}
       <!-- write out the category -->
       <div class="category">
@@ -42,21 +46,19 @@
 								{{ user.email }}
 							{% endif %}</div>
 	          <div class="status">
-							<img src="/static/cleardot.gif" class=
-								"{% if user.available %}
-									avail
-								{% else %}
-									unavail
-								{% endif %}">
-							{% if user.available %}
-							  available
+							{% if user.is_available %}
+								<img src="/static/cleardot.gif" class="avail">
+								available
 							{% else %}
+								<img src="/static/cleardot.gif" class="unavail">
 							  unavailable
 							{% endif %}
 	          </div>
 					</div>
           <a class="hangoutlink" href="/connect?user={{user.email}}">
-            <img class="hangout" src="/static/hangout-button.png"/>
+					  <img src="https://ssl.gstatic.com/s2/oz/images/stars/hangout/1/gplus-hangout-20x86-normal.png"
+					    alt="Start a Hangout"
+							class="hangout"/>
           </a>
         </div>
       {% endfor %}

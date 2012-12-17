@@ -24,15 +24,26 @@
 		</span>
   </div>
 
-  <form method="POST" action="/manageAccount">
-  {% for category in categories %}
-    <input class="checkbox" type="checkbox" name="{{category.name}}" value="true"
-		{% if category.checked %}
-			checked
-		{% endif %}>{{category.name|title}}<br>
-  {% endfor %}
-	<input class="submitbutton" type="submit">
-  </form>
+	<div class="centercolumn">
+    {% if not is_subscribed %}
+		<div class="warning">
+			Expert Connect is unable to contact you via chat.<br>
+			Please verify that you have completed step 2 on the <a href="/signUp">sign up</a> page.
+		</div>
+    {% endif %}
+		<div class="accountsummary">
+	    {% if empty_list %}			
+				<a href="/manageAccount/addExpertise">Add</a> areas of expertise to begin connecting with users!<br><br>
+	    {% endif %}				
+			You are currently <a href="/">listed</a> as an expert in the following categories:<br>
+			{% for category in user_listed_categories %}
+				<div class="category">{{category|title}}</div>
+	  	{% endfor %}
+			<a href="/manageAccount/addExpertise">
+				<div class="category add">Add/Edit</div>
+			</a>
+		</div>
+	</div>
 
 </body>
 </html>
