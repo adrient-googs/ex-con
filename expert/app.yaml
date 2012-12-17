@@ -22,8 +22,6 @@ handlers:
 - url: /.*
   script: guru.py
 
-
-
 inbound_services:
 - xmpp_error
 - xmpp_message
