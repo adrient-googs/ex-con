@@ -25,6 +25,7 @@ handlers:
 
 
 inbound_services:
+- channel_presence
 - xmpp_error
 - xmpp_message
 - xmpp_presence

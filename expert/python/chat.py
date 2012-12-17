@@ -5,7 +5,7 @@ Contains all request handlers for chat.
 import datetime
 import logging
 
-from datatypes import Category, User, UserToCategory
+from datatypes import Category, Client, User, UserToCategory
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import xmpp_handlers
@@ -260,10 +260,13 @@ class XmppAvailableHandler(webapp.RequestHandler):
     u = User.get_by_key_name(sender)
     if u == None:
       u = User(email=sender)
+    previously_available = u.is_available
     u.show = self.request.get('show')
     u.show_time = datetime.datetime.now()
     u.is_available = True
     u.put()
+    if not previously_available:
+      Client.send_global_refresh()
     logging.info('User available ' + sender)
     logging.info('stanza ' + self.request.get('stanza'))
     logging.info('body ' + self.request.get('body'))
@@ -279,8 +282,11 @@ class XmppUnavailableHandler(webapp.RequestHandler):
     u = User.get_by_key_name(sender)
     if u == None:
       u = User(email=sender)
+    previously_available = u.is_available
     u.is_available = False
     u.put()
+    if previously_available:
+      Client.send_global_refresh()
     logging.info('User unavailable ' + sender)
     logging.info('stanza ' + self.request.get('stanza'))
     logging.info('body ' + self.request.get('body'))
@@ -315,5 +321,3 @@ def getHandlers():
     ('/_ah/xmpp/presence/unavailable/', XmppUnavailableHandler),
     ('/_ah/xmpp/presence/probe/', XmppProbeHandler),
   ]
-
-

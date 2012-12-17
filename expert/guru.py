@@ -19,6 +19,7 @@ import re
 import sys
 import wsgiref.handlers
 
+from google.appengine.api import channel
 from google.appengine.api import memcache
 from google.appengine.api import users
 from google.appengine.api import xmpp
@@ -31,10 +32,11 @@ from google.appengine.ext.webapp import template
 sys.path.append(os.path.join(os.path.dirname(__file__), 'python'))
 import admin
 import chat
+import client
 import httplib2
 from apiclient.discovery import build
 from apiclient.discovery import build_from_document
-from datatypes import Category, User, UserToCategory
+from datatypes import Category, Client, User, UserToCategory
 from oauth2client.appengine import oauth2decorator_from_clientsecrets
 from oauth2client.client import AccessTokenRefreshError
 
@@ -70,11 +72,11 @@ discovery_doc = f.read()
 f.close()
 
 service = build_from_document(discovery_doc, base="https://www.googleapis.com/", http=http)
-# service = build("plus", "v1", http=http)
+calendar_service = build("calendar", "v3", http=http)
 # service = build("plus", "dogfood", http=http, discoveryServiceUrl='https://www-googleapis-staging.sandbox.google.com/discovery/v1/apis/plus/dogfood/rest')
 decorator = oauth2decorator_from_clientsecrets(
     CLIENT_SECRETS,
-    scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/plus.profiles.read https://www.googleapis.com/auth/userinfo.profile',
+    scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/plus.profiles.read https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.readonly',
     message=MISSING_CLIENT_SECRETS_MESSAGE)
 
 class MainHandler(webapp.RequestHandler):
@@ -85,18 +87,22 @@ class MainHandler(webapp.RequestHandler):
     self.response.out.write(template.render(path, template_values))
 
   def get(self):
-    is_expert = False
     user = users.get_current_user()
-    if user != None:
-      u = User.get_by_key_name(user.email())
-      if u != None:
-        is_expert = u.is_expert
+    if not user:
+      self.redirect(users.create_login_url("/"))
+      return
+    token = channel.create_channel(user.user_id())
+    is_expert = False
+    u = User.get_by_key_name(user.email())
+    if u:
+      is_expert = u.is_expert
     categories = []
     for category in Category.all():
       experts = tuple(category.get_experts())
       if experts:
         categories.append((category, experts))
     self.Render("main.html", {
+      'token': token,
       'is_expert': is_expert,
       'categories': tuple(categories),
       'login': users.create_login_url("/"),
@@ -119,6 +125,7 @@ class ManageAccountHandler(webapp.RequestHandler):
     u = User.get_by_key_name(user.email())
     if u == None:
       self.redirect('/signUp')
+      return
     if not u.is_expert:
       try:
         http = decorator.http()
@@ -132,17 +139,23 @@ class ManageAccountHandler(webapp.RequestHandler):
           u.plus_page = me['url']
         u.is_expert = True
         u.put()
+        calendar = calendar_service.calendars().get(calendarId='primary').execute(http=http)
+        logging.error(calendar['summary'])
       except AccessTokenRefreshError:
         self.redirect('/manageAccount')
+    # request = calendar_service.freebusy().query(body='{ "timeMax": "2012-08-24T00:00:00Z", "timeMin": "2012-08-23T00:00:00Z"}')
+    # logging.error(request)
+    # logging.error(request.body)
+    # 
+    # response = request.execute()
+    # logging.error(response)
+    
     user_listed_categories = [category.key().name() for category in u.get_categories()]
     template_values = {
       'empty_list': len(user_listed_categories) == 0,
       'user_listed_categories': user_listed_categories,
-      'email': user.email(),
-      'profile_pic': u.profile_pic,
-      'name': u.name,
+      'user': u,
       'logout': users.create_logout_url("/"),
-      'subscribed': u.is_subscribed,
     }
     self.Render("manage_account.html", template_values)
 
@@ -167,11 +180,8 @@ class AddExpertiseHandler(webapp.RequestHandler):
     all_categories = [{'checked': category.key().name() in user_listed_categories, 'name': category.name} for category in Category.all().fetch(100)]
     template_values = {
       'all_categories': all_categories,
-      'email': user.email(),
-      'profile_pic': u.profile_pic,
-      'name': u.name,
+      'user': u,
       'logout': users.create_logout_url("/"),
-      'subscribed': u.is_subscribed,
     }
     self.Render("add_expertise.html", template_values)
     
@@ -191,6 +201,17 @@ class AddExpertiseHandler(webapp.RequestHandler):
     for category in Category.all().fetch(100):
       if self.request.get(category.name) == 'true':
         u.add_category(category.name)
+    other_category = self.request.get("other").lower()
+    logging.error("Other category")
+    # Disallow empty category names and the "other" category name
+    if other_category and other_category != "" and other_category != "other":
+      logging.error("Condition")
+      if not Category.get_by_key_name(other_category):
+        logging.error("Adding category")
+        category = Category(name=other_category)
+        category.put()
+        u.add_category(other_category)
+      
     self.redirect("/manageAccount")
 
 class ConnectHandler(webapp.RequestHandler):
@@ -250,7 +271,7 @@ def main():
       ('/signUp', SignUpHandler),
       (decorator.callback_path, decorator.callback_handler()),
   ]
-  for module in (admin, chat):
+  for module in (admin, chat, client):
     handlers += module.getHandlers()
   app = webapp.WSGIApplication(handlers, debug=True)
   wsgiref.handlers.CGIHandler().run(app)

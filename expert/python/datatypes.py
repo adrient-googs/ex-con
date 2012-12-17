@@ -1,6 +1,16 @@
+from google.appengine.api import channel
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
+
+class Client(db.Model):
+  """Client ids that are connected via Channel."""
+  id = db.StringProperty(required=True)
+
+  @staticmethod
+  def send_global_refresh():
+    for client in Client.all():
+      channel.send_message(client.id, "refresh")
 
 class Category(db.Model):
   """Represents an expertise category. Name is unique."""
