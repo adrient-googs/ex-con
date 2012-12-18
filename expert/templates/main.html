@@ -1,7 +1,19 @@
 <html>
 <head>
   <title>Expert Connect</title>
+  
+  <!-- css -->
+  
   <link rel="stylesheet" type="text/css" href="/static/base.css"/>
+  
+  <!-- javascript -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+  
+  <script src="javascript/underscore-min.js"></script>
+  <!-- <script src="libs/backbone-0.9.2.min.js"></script> uncomment for backbone -->
+  
+  <script src="javascript/expert.js"></script>
 </head>
 
 <body>
@@ -14,55 +26,90 @@
     <!-- options that the user has -->
     <span id="options">
     </span>
-		
-		<span id="account">
-			{% if is_expert %}
-				<a href="/manageAccount">Account Management</a>
-			{% else %}
-				<a href="/signUp">Sign up</a> to become an Expert!<br>
-			{% endif %}
-		</span>
+    
+    <span id="account">
+      {% if is_expert %}
+        <a href="/manageAccount">Account Management</a>
+      {% else %}
+        <a href="/signUp">Sign up</a> to become an Expert!<br>
+      {% endif %}
+    </span>
   </div>
   
+  <span>
+  
   <!-- this is where we see a list of experts -->
-  <div class="centercolumn">
-    {% for category_pair in categories %}
-      <!-- write out the category -->
-      <div class="category">
-        {{ category_pair.0.name|title }}
+  <div class="center-column test-red">
+    
+    <div id="navigate-column" class="test-green">
+      <div id="title">xStop</div>
+      
+      <div id="pages">
+        <a class="current-page test-orange" href="/">See Experts</a>
+        {% if is_expert %}
+          <a class="other-page test-purple" href="/manageAccount">Manage Account</a>
+        {% else %}
+          <a class="other-page test-purple" href="/signUp">Sign Up</a>
+        {% endif %}
       </div>
-            
-      <!-- write out the experts with this category -->
-      {% for user in category_pair.1 %}
-        <div class="expert">
-					<div class="picturecolumn">
-						<img class="profile" src="{{user.profile_pic}}"/>
-					</div>
-					<div class="detailcolumn">
-	          <div class="username">
-							{% if user.name %}
-								{{ user.name }}
-							{% else %}
-								{{ user.email }}
-							{% endif %}</div>
-	          <div class="status">
-							{% if user.is_available %}
-								<img src="/static/cleardot.gif" class="avail">
-								available
-							{% else %}
-								<img src="/static/cleardot.gif" class="unavail">
-							  unavailable
-							{% endif %}
-	          </div>
-					</div>
-          <a class="hangoutlink" href="/connect?user={{user.email}}">
-					  <img src="https://ssl.gstatic.com/s2/oz/images/stars/hangout/1/gplus-hangout-20x86-normal.png"
-					    alt="Start a Hangout"
-							class="hangout"/>
+      
+      <div id="mini-categories">
+        {% for category_pair in categories %}
+          <a href="#{{category_pair.0.name|slugify}}">
+            {{ category_pair.0.name|title }}
           </a>
-        </div>
+        {% endfor %}
+      </div>
+    </div>
+    
+    <div id="main-column" class="test-blue">
+      {% for category_pair in categories %}
+        <!-- write out the category -->
+        <a id="{{category_pair.0.name|slugify}}" class="category">
+          {{ category_pair.0.name|title }}
+        </a>
+
+        <!-- write out the experts with this category -->
+        {% for user in category_pair.1 %}
+          <div class="expert">
+            {% if user.is_available %}
+              <a class="hangoutlink" href="/connect?user={{user.email}}">
+                <img src="static/hangout-button.png"
+                  alt="Start a Hangout"
+                  class="hangout"/>
+              </a>
+            {% else %}
+              <a class="hangoutlink">
+                <img src="static/hangout-button-faded.png"
+                  alt="Start a Hangout"
+                  class="hangout"/>
+              </a>
+            {% endif %}
+                              
+            <div class="picturecolumn">
+              <img class="profile" src="{{user.profile_pic}}"/>
+            </div>
+            <div class="detailcolumn">
+              <div class="username">
+                {% if user.name %}
+                  {{ user.name }}
+                {% else %}
+                  {{ user.email }}
+                {% endif %}</div>
+              <div class="status">
+                {% if user.is_available %}
+                  <img src="/static/cleardot.gif" class="avail">
+                  available
+                {% else %}
+                  <img src="/static/cleardot.gif" class="unavail">
+                  unavailable
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
       {% endfor %}
-    {% endfor %}
-  </div>
+    </div> <!-- main column -->  
+  </div> <!-- center column -->
 </body>
 </html>

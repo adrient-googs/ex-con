@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# order in which to compile coffee files
+COMPILE_ORDER=""
+COMPILE_ORDER="${COMPILE_ORDER} expert/coffee/util.coffee"
+COMPILE_ORDER="${COMPILE_ORDER} expert/coffee/expert.coffee"
+
+echo "Coffeescript Compilation Order:${COMPILE_ORDER}"
+coffee --compile --watch --join expert/javascript/expert.js ${COMPILE_ORDER} &
+dev_appserver.py secretary
+
+dev_appserver.py expert

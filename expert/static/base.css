@@ -30,7 +30,7 @@ div#titlebar {
   margin-top: 0px;
   margin-left: 0px;
   margin-right: 0px;
-	padding: 20px 20px 0 20px;
+  padding: 20px 20px 0 20px;
 }
 
 span#title {
@@ -39,86 +39,133 @@ span#title {
 }
 
 span#account {
-	display: inline-block;
-	font-size:0.9em;
-	float: right;
-	text-align: right;
+  display: inline-block;
+  font-size:0.9em;
+  float: right;
+  text-align: right;
 }
 
 span#accountdetails {
-	display: inline-block;
+  display: inline-block;
 }
 
 /* The Expert Listing Page */
 
-div.centercolumn {
-	margin-left: auto;
-	margin-right: auto;
-	width: 600px;
+div.center-column {
+  margin-left: auto;
+  margin-right: auto;
+	overflow: auto;
+	width: 800px;
 }
 
-div.centercolumn div.category {
-	background-color: rgb(240, 240, 240);
+div#navigate-column {
+  width: 120px;
+  float: left;
+  font-family: arial,sans-serif;
+}
+
+div#navigate-column div#title {
+  color: #DD4B39;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+div#navigate-column a {
+  text-decoration: none;
+  color: black;
+  font-size: 10pt;
+  display: block;
+}
+
+div#navigate-column div#pages {
+  margin-top: 10px;
+}
+
+div#navigate-column a:hover {
+  text-decoration: underline;
+}
+
+div#navigate-column a.current-page {
+  font-weight: 700;
+  color: #0000a0;  
+}
+
+div#navigate-column a.other-page {
+  font-weight: 600;
+}
+
+div#navigate-column div#mini-categories {
+  margin-top: 10px;
+}
+
+div#main-column {
+  width: 680px;
+  float: right;
+}
+
+div#main-column a.category {
+  display: block;
+  background-color: rgb(240, 240, 240);
   color: rgb(60, 60, 6 0);
-	font-size: 1.3em;
-	margin-bottom: 10px;
-	padding: 3px;
+  font-size: 1.3em;
+  margin-bottom: 10px;
+  padding: 3px;
 }
 
-div.centercolumn div.add {
-	text-align: center;
+div#main-column div.add {
+  text-align: center;
 }
 
-div.centercolumn div.expert {
-	height: 50px;
-	margin-left: 10px;
-	margin-bottom: 10px;
-	position: relative;
+div#main-column div.expert {
+  height: 50px;
+  margin-left: 10px;
+  margin-bottom: 10px;
+  position: relative;
 }
 
-div.centercolumn div.expert a.hangoutlink {
-	float: right;
-	position: relative;
+div#main-column div.expert a.hangoutlink {
+  float: left;
+  position: relative;
 }
 
-div.centercolumn div.expert img.hangout {
-	height: 20px;
-	left: 0px;
-	top: 5px;
-	width: 86px;
+div#main-column div.expert img.hangout {
+  left: 0px;
+  margin-top: 3px;
+  width: 86px;
 }
 
-div.centercolumn div.expert div.picturecolumn {
-	float: left;
-	position: relative;
-	width: 50px;
+div#main-column div.expert div.picturecolumn {
+  margin-left: 10px;
+  float: left;
+  position: relative;
+  width: 50px;
 }
 
-div.centercolumn div.expert img.profile {
-	height: 43px;
+div#main-column div.expert img.profile {
+  height: 43px;
 }
 
-div.centercolumn div.expert div.detailcolumn {
-	float: left;
-	position: relative;
+div#main-column div.expert div.detailcolumn {
+  float: left;
+  position: relative;
 }
 
-div.centercolumn div.expert div.username {
-	font-size: 1.25em;
+div#main-column div.expert div.username {
+  font-size: 1.25em;
 }
 
-div.centercolumn div.expert div.status {
-	color: rgb(80,80,80);
-	font-size: 0.8em;
+div#main-column div.expert div.status {
+  color: rgb(80,80,80);
+  font-size: 0.8em;
 }
 
 div.warning {
-	color: red;
-	margin-bottom: 20px;
+  color: red;
+  margin-bottom: 20px;
 }
 
 div.indent {
-	margin-left: 20px;
+  margin-left: 20px;
 }
 
 input.submitbutton {
@@ -126,34 +173,34 @@ input.submitbutton {
   background: #4D90FE;
   color: white;
   cursor: pointer;
-	font: 1.2em;
-	height: 30px;
+  font: 1.2em;
+  height: 30px;
   padding: 4px;
-	width: 100px;
+  width: 100px;
   -moz-border-radius: 4px;
   -webkit-border-radius: 4px;
 }
 
 img#invitetochat {
-	display: block;
-	margin-left: auto;
-	margin-right: auto 
+  display: block;
+  margin-left: auto;
+  margin-right: auto 
 }
 
 img.profilepic {
-	vertical-align: middle;
+  vertical-align: middle;
 }
 
 img.avail {
-	background: url(/static/icons.png) no-repeat -40px -100px;
-	height: 16px;
-	margin-bottom: -3px;
-	width: 16px;
+  background: url(/static/icons.png) no-repeat -40px -100px;
+  height: 16px;
+  margin-bottom: -3px;
+  width: 16px;
 }
 
 img.unavail {
-	background: url(/static/icons.png) no-repeat -100px -100px;
-	height: 16px;
-	margin-bottom: -3px;
-	width: 16px;
+  background: url(/static/icons.png) no-repeat -100px -100px;
+  height: 16px;
+  margin-bottom: -3px;
+  width: 16px;
 }
