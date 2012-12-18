@@ -274,6 +274,10 @@ class ConnectHandler(webapp.RequestHandler):
         logging.error('Connect request to invalid user/expert ' + user)
     url = 'https://plus.google.com/hangouts/_/2e3e57ff748dd2c7c79e1c40c274cca933a8d984?authuser=0&hl=en-US'
     xmpp.send_message(u.email, chat.REQUEST_MSG % (url,))
+    for email in ['karishmashah@google.com', 'charleschen@google.com', 'adrient@google.com']:
+      u = User.get_by_key_name(email)
+      if u:
+        xmpp.send_message(email, chat.FACILITATOR_MSG % (url,))
     self.redirect(url)
 
 class SignUpHandler(webapp.RequestHandler):
