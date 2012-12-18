@@ -296,6 +296,8 @@ class SignUpHandler(webapp.RequestHandler):
     u = User.get_by_key_name(user.email())
     if u == None:
       u = User(email=user.email())
+      u.put()
+    if not u.user_id:
       u.user_id = user.user_id()
       u.put()
     template_values = {
