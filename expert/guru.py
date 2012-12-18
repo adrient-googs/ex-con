@@ -276,7 +276,7 @@ class ConnectHandler(webapp.RequestHandler):
     xmpp.send_message(u.email, chat.REQUEST_MSG % (url,))
     for email in ['karishmashah@google.com', 'charleschen@google.com', 'adrient@google.com']:
       u = User.get_by_key_name(email)
-      if u:
+      if u and u.is_subscribed:
         xmpp.send_message(email, chat.FACILITATOR_MSG % (url,))
     self.redirect(url)
 
