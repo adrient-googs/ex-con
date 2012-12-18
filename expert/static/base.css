@@ -51,7 +51,7 @@ span#accountdetails {
 
 /* The Expert Listing Page */
 
-div.column-container {
+div#column-container {
   margin-left: auto;
   margin-right: auto;
 	overflow: auto;
@@ -94,7 +94,7 @@ div#column-1 a.other-page {
   font-weight: 600;
 }
 
-div#column-1 div#mini-categories {
+div#column-1 div#mini-navigation {
   margin-top: 10px;
 }
 

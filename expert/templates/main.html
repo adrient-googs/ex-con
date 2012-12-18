@@ -36,15 +36,64 @@
     </span>
   </div>
   
-  <!-- this is where we see a list of experts -->
-  <div class="column-container test-red">
+  <!-- this contains the two main columns -->
+  <div id="column-container" class="test-red">
+    
+    <!-- navigation column -->
     <div id="column-1" class="test-green">
-      {% include column_1 %}
+      <div id="title">xStop</div>
+
+      <div id="pages">
+        <a class="current-page test-orange" href="/">See Experts</a>
+        {% if is_expert %}
+          <a class="other-page test-purple" href="/manageAccount">Manage Account</a>
+        {% else %}
+          <a class="other-page test-purple" href="/signUp">Sign Up</a>
+        {% endif %}
+      </div>
+      
+      <div id="mini-navigation-parent">
+        <!-- divs in the holding pen with id="mini-navigation" go here -->
+      </div>
+      
     </div>
     <div id="column-2" class="test-blue">
-      {% include column_2 %}
+
+      <div id="main-contents-parent">
+        <!-- divs in the holding pen with id="main-contents" go here -->
+      </div>
+
     </div> <!-- main column -->  
   </div> <!-- center column -->
+  
+  <div id="holding-pen" style="display:none">
+    
+    <!--
+    Here we include the actual contents of the page, which will be a
+    series of divs of the form:
+    
+    <div id="XXX">...</div>
+    <div id="YYY">...</div>
+    
+    For now, these divs are in a temporary holding pen and they're
+    invisible (display:none), but expert.coffee will search for
+    these divs and MOVE them to the appropriate container like so:
+
+    <div id="XXX-parent">
+      <div id="XXX">...</div>
+    </div>
+    <div id="YYY-parent">
+      <div id="YYY">...</div>
+    </div>
+    
+    Once moved the divs will be visible.
+    -->
+    
+    {% include contents %}
+    
+  </div>
+  
+  <!-- random javascript stuff -->
 	<script type="text/javascript" src="/_ah/channel/jsapi"></script>
 	<script type="text/javascript" src="/static/main.js"></script>
   <script>

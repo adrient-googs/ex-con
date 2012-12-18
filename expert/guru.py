@@ -108,8 +108,8 @@ class MainHandler(webapp.RequestHandler):
       if experts:
         categories.append((category, experts))
     self.Render("main.html", {
-      'column_1': 'expert_list_column_1.html',
-      'column_2': 'expert_list_column_2.html',
+      'contents': 'expert_list_column_2.html',
+      # 'column_2': 'expert_list_column_2.html',
       'token': token,
       'is_expert': is_expert,
       'categories': tuple(categories),

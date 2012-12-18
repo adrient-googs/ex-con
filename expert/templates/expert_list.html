@@ -1,0 +1,56 @@
+<div id="mini-navigation">
+  {% for category_pair in categories %}
+    <a href="#{{category_pair.0.name|slugify}}">
+      {{ category_pair.0.name|title }}
+    </a>
+  {% endfor %}
+</div>
+
+<div id="main-contents" class="test-blue">
+{% for category_pair in categories %}
+  <!-- write out the category -->
+  <a id="{{category_pair.0.name|slugify}}" class="category">
+    {{ category_pair.0.name|title }}
+  </a>
+
+  <!-- write out the experts with this category -->
+  {% for user_pair in category_pair.1 %}
+    <div class="expert">
+      {% if user_pair.1 %}
+        <a class="hangoutlink" href="/connect?user={{user.email}}">
+          <img src="static/hangout-button.png"
+            alt="Start a Hangout"
+            class="hangout"/>
+        </a>
+      {% else %}
+        <a class="hangoutlink">
+          <img src="static/hangout-button-faded.png"
+            alt="Start a Hangout"
+            class="hangout"/>
+        </a>
+      {% endif %}
+                        
+      <div class="picturecolumn">
+        <img class="profile" src="{{user_pair.0.profile_pic}}"/>
+      </div>
+      <div class="detailcolumn">
+        <div class="username">
+          {% if user_pair.0.name %}
+            {{ user_pair.0.name }}
+          {% else %}
+            {{ user_pair.0.email }}
+          {% endif %}</div>
+        <div class="status">
+          {% if user_pair.1 %}
+            <img src="/static/cleardot.gif" class="avail">
+            available
+          {% else %}
+            <img src="/static/cleardot.gif" class="unavail">
+            unavailable
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+{% endfor %}
+</div>
