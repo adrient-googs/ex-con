@@ -1,49 +1,14 @@
-<html>
-<head>
-  <title>Account Management</title>
-  <link rel="stylesheet" type="text/css" href="/static/base.css" />
-</head>
-<body>
-  <!-- the title bar at the top of the screen -->
-  <div id="titlebar">
-
-    <!-- title of the app -->
-    <span id="title">Account Management</span>
-    
-    <!-- options that the user has -->
-    <span id="options">
-    </span>
-		
-		<span id="account">
-			<span id="accountdetails">
-			  {{user.email}}
-				<br>
-				<a href={{logout}}>Logout</a>
-			</span>
-			<img class="profilepic" src="{{user.profile_pic}}">
-		</span>
-  </div>
-
-	<div class="center-column">
-    {% if not user.is_subscribed %}
-		<div class="warning">
-			Expert Connect is unable to contact you via chat.<br>
-			Please verify that you have completed step 2 on the <a href="/signUp">sign up</a> page.
-		</div>
-    {% endif %}
-		<div class="accountsummary">
-	    {% if empty_list %}			
-				<a href="/manageAccount/addExpertise">Add</a> areas of expertise to begin connecting with users!<br><br>
-	    {% endif %}				
-			You are currently <a href="/">listed</a> as an expert in the following categories:<br>
-			{% for category in user_listed_categories %}
-				<div class="category">{{category|title}}</div>
-	  	{% endfor %}
-			<a href="/manageAccount/addExpertise">
-				<div class="category add">Add/Edit</div>
-			</a>
-		</div>
+<div id="main-contents">
+	<div class="accountsummary">
+    {% if empty_list %}			
+			<a href="/manageAccount/addExpertise">Add</a> areas of expertise to begin connecting with users!<br><br>
+    {% endif %}				
+		You are currently <a href="/">listed</a> as an expert in the following categories:<br>
+		{% for category in user_listed_categories %}
+			<div class="category">{{category|title}}</div>
+  	{% endfor %}
+		<a href="/manageAccount/addExpertise">
+			<div class="category add">Add/Edit</div>
+		</a>
 	</div>
-
-</body>
-</html>
+</div>

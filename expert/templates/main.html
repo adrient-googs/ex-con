@@ -50,6 +50,9 @@
         {% else %}
           <a class="other-page test-purple" href="/signUp">Sign Up</a>
         {% endif %}
+        {% if is_admin %}
+          <a class="other-page test-purple" href="/admin">Admin</a>
+        {% endif %}
       </div>
       
       <div id="mini-navigation-parent">

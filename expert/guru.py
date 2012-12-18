@@ -108,13 +108,14 @@ class MainHandler(webapp.RequestHandler):
       if experts:
         categories.append((category, experts))
     self.Render("main.html", {
-      'contents': 'expert_list_column_2.html',
-      # 'column_2': 'expert_list_column_2.html',
+      'user': u,
+      'contents': 'expert_list.html',
       'token': token,
       'is_expert': is_expert,
       'categories': tuple(categories),
       'login': users.create_login_url("/"),
       'logout': users.create_logout_url("/"),
+      'is_admin': users.is_current_user_admin(),
     })
 
 class ManageAccountHandler(webapp.RequestHandler):
@@ -172,12 +173,15 @@ class ManageAccountHandler(webapp.RequestHandler):
 
     user_listed_categories = [category.key().name() for category in u.get_categories()]
     template_values = {
+      'contents': 'manage_account.html',
+      'is_expert': True,
       'empty_list': len(user_listed_categories) == 0,
       'user_listed_categories': user_listed_categories,
       'user': u,
       'logout': users.create_logout_url("/"),
+      'is_admin': users.is_current_user_admin(),
     }
-    self.Render("manage_account.html", template_values)
+    self.Render("main.html", template_values)
 
 class CalendarCronHandler(webapp.RequestHandler):
   """For each expert, refresh calendar busy_time."""
