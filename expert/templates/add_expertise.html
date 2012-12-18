@@ -16,15 +16,15 @@
 		
 		<span id="account">
 			<span id="accountdetails">
-			  {{email}}
+			  {{user.email}}
 				<br>
 				<a href={{logout}}>Logout</a>
 			</span>
-			<img class="profilepic" src="{{profile_pic}}">
+			<img class="profilepic" src="{{user.profile_pic}}">
 		</span>
   </div>
 
-	<div class="centercolumn">
+	<div class="center-column">
 	  <form method="POST" action="/manageAccount/addExpertise">
 	  {% for category in all_categories %}
 	    <input class="checkbox" type="checkbox" name="{{category.name}}" value="true"
@@ -32,6 +32,7 @@
 				checked
 			{% endif %}>{{category.name|title}}<br>
 	  {% endfor %}
+		Other: <input type="text" name="other"><br><br>
 		<input class="submitbutton" type="submit">
 	  </form>
 	</div>

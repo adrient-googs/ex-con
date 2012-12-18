@@ -36,17 +36,24 @@
     </span>
   </div>
   
-  <span>
-  
   <!-- this is where we see a list of experts -->
   <div class="column-container test-red">
     <div id="column-1" class="test-green">
       {% include column_1 %}
     </div>
-    
     <div id="column-2" class="test-blue">
       {% include column_2 %}
     </div> <!-- main column -->  
   </div> <!-- center column -->
+	<script type="text/javascript" src="/_ah/channel/jsapi"></script>
+	<script type="text/javascript" src="/static/main.js"></script>
+  <script>
+    channel = new goog.appengine.Channel('{{ token }}');
+    socket = channel.open();
+    socket.onopen = onOpened;
+    socket.onmessage = onMessage;
+    socket.onerror = onError;
+    socket.onclose = onClose;
+  </script>
 </body>
 </html>

@@ -16,16 +16,16 @@
 		
 		<span id="account">
 			<span id="accountdetails">
-			  {{email}}
+			  {{user.email}}
 				<br>
 				<a href={{logout}}>Logout</a>
 			</span>
-			<img class="profilepic" src="{{profile_pic}}">
+			<img class="profilepic" src="{{user.profile_pic}}">
 		</span>
   </div>
 
-	<div class="centercolumn">
-    {% if not is_subscribed %}
+	<div class="center-column">
+    {% if not user.is_subscribed %}
 		<div class="warning">
 			Expert Connect is unable to contact you via chat.<br>
 			Please verify that you have completed step 2 on the <a href="/signUp">sign up</a> page.

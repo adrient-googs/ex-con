@@ -22,10 +22,15 @@ handlers:
   login: admin
   script: guru.py
 
+- url: /calendarCron
+  # login: admin
+  script: guru.py
+
 - url: /.*
   script: guru.py
 
 inbound_services:
+- channel_presence
 - xmpp_error
 - xmpp_message
 - xmpp_presence
