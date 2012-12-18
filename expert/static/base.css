@@ -51,59 +51,59 @@ span#accountdetails {
 
 /* The Expert Listing Page */
 
-div.center-column {
+div.column-container {
   margin-left: auto;
   margin-right: auto;
 	overflow: auto;
 	width: 800px;
 }
 
-div#navigate-column {
+div#column-1 {
   width: 120px;
   float: left;
   font-family: arial,sans-serif;
 }
 
-div#navigate-column div#title {
+div#column-1 div#title {
   color: #DD4B39;
   cursor: pointer;
   font-size: 20px;
 }
 
-div#navigate-column a {
+div#column-1 a {
   text-decoration: none;
   color: black;
   font-size: 10pt;
   display: block;
 }
 
-div#navigate-column div#pages {
+div#column-1 div#pages {
   margin-top: 10px;
 }
 
-div#navigate-column a:hover {
+div#column-1 a:hover {
   text-decoration: underline;
 }
 
-div#navigate-column a.current-page {
+div#column-1 a.current-page {
   font-weight: 700;
   color: #0000a0;  
 }
 
-div#navigate-column a.other-page {
+div#column-1 a.other-page {
   font-weight: 600;
 }
 
-div#navigate-column div#mini-categories {
+div#column-1 div#mini-categories {
   margin-top: 10px;
 }
 
-div#main-column {
+div#column-2 {
   width: 680px;
   float: right;
 }
 
-div#main-column a.category {
+div#column-2 a.category {
   display: block;
   background-color: rgb(240, 240, 240);
   color: rgb(60, 60, 6 0);
@@ -112,49 +112,49 @@ div#main-column a.category {
   padding: 3px;
 }
 
-div#main-column div.add {
+div#column-2 div.add {
   text-align: center;
 }
 
-div#main-column div.expert {
+div#column-2 div.expert {
   height: 50px;
   margin-left: 10px;
   margin-bottom: 10px;
   position: relative;
 }
 
-div#main-column div.expert a.hangoutlink {
+div#column-2 div.expert a.hangoutlink {
   float: left;
   position: relative;
 }
 
-div#main-column div.expert img.hangout {
+div#column-2 div.expert img.hangout {
   left: 0px;
   margin-top: 3px;
   width: 86px;
 }
 
-div#main-column div.expert div.picturecolumn {
+div#column-2 div.expert div.picturecolumn {
   margin-left: 10px;
   float: left;
   position: relative;
   width: 50px;
 }
 
-div#main-column div.expert img.profile {
+div#column-2 div.expert img.profile {
   height: 43px;
 }
 
-div#main-column div.expert div.detailcolumn {
+div#column-2 div.expert div.detailcolumn {
   float: left;
   position: relative;
 }
 
-div#main-column div.expert div.username {
+div#column-2 div.expert div.username {
   font-size: 1.25em;
 }
 
-div#main-column div.expert div.status {
+div#column-2 div.expert div.status {
   color: rgb(80,80,80);
   font-size: 0.8em;
 }

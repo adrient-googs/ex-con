@@ -97,6 +97,9 @@ class MainHandler(webapp.RequestHandler):
       if experts:
         categories.append((category, experts))
     self.Render("main.html", {
+      'column_1': 'expert_list_column_1.html',
+      'column_2': 'expert_list_column_2.html',
+
       'is_expert': is_expert,
       'categories': tuple(categories),
       'login': users.create_login_url("/"),

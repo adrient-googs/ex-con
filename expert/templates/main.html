@@ -39,76 +39,13 @@
   <span>
   
   <!-- this is where we see a list of experts -->
-  <div class="center-column test-red">
-    
-    <div id="navigate-column" class="test-green">
-      <div id="title">xStop</div>
-      
-      <div id="pages">
-        <a class="current-page test-orange" href="/">See Experts</a>
-        {% if is_expert %}
-          <a class="other-page test-purple" href="/manageAccount">Manage Account</a>
-        {% else %}
-          <a class="other-page test-purple" href="/signUp">Sign Up</a>
-        {% endif %}
-      </div>
-      
-      <div id="mini-categories">
-        {% for category_pair in categories %}
-          <a href="#{{category_pair.0.name|slugify}}">
-            {{ category_pair.0.name|title }}
-          </a>
-        {% endfor %}
-      </div>
+  <div class="column-container test-red">
+    <div id="column-1" class="test-green">
+      {% include column_1 %}
     </div>
     
-    <div id="main-column" class="test-blue">
-      {% for category_pair in categories %}
-        <!-- write out the category -->
-        <a id="{{category_pair.0.name|slugify}}" class="category">
-          {{ category_pair.0.name|title }}
-        </a>
-
-        <!-- write out the experts with this category -->
-        {% for user in category_pair.1 %}
-          <div class="expert">
-            {% if user.is_available %}
-              <a class="hangoutlink" href="/connect?user={{user.email}}">
-                <img src="static/hangout-button.png"
-                  alt="Start a Hangout"
-                  class="hangout"/>
-              </a>
-            {% else %}
-              <a class="hangoutlink">
-                <img src="static/hangout-button-faded.png"
-                  alt="Start a Hangout"
-                  class="hangout"/>
-              </a>
-            {% endif %}
-                              
-            <div class="picturecolumn">
-              <img class="profile" src="{{user.profile_pic}}"/>
-            </div>
-            <div class="detailcolumn">
-              <div class="username">
-                {% if user.name %}
-                  {{ user.name }}
-                {% else %}
-                  {{ user.email }}
-                {% endif %}</div>
-              <div class="status">
-                {% if user.is_available %}
-                  <img src="/static/cleardot.gif" class="avail">
-                  available
-                {% else %}
-                  <img src="/static/cleardot.gif" class="unavail">
-                  unavailable
-                {% endif %}
-              </div>
-            </div>
-          </div>
-        {% endfor %}
-      {% endfor %}
+    <div id="column-2" class="test-blue">
+      {% include column_2 %}
     </div> <!-- main column -->  
   </div> <!-- center column -->
 </body>
