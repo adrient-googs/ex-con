@@ -160,8 +160,21 @@ div#column-2 div.expert div.status {
 }
 
 div.warning {
-  color: red;
-  margin-bottom: 20px;
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  margin-left: -150pt;
+  text-align: center;
+  color: white;
+  background-color: rgb(255, 50, 50);
+  width: 300pt;
+  padding: 10pt;
+  border: 2px solid black;
+}
+
+div.warning a {
+  color: white;
+  font-weight: 700;
 }
 
 div.indent {

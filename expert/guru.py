@@ -179,6 +179,7 @@ class ManageAccountHandler(webapp.RequestHandler):
       'user_listed_categories': user_listed_categories,
       'user': u,
       'logout': users.create_logout_url("/"),
+      'is_expert': True,
       'is_admin': users.is_current_user_admin(),
     }
     self.Render("main.html", template_values)
@@ -237,8 +238,11 @@ class AddExpertiseHandler(webapp.RequestHandler):
       'all_categories': all_categories,
       'user': u,
       'logout': users.create_logout_url("/"),
+      'contents': 'add_expertise.html',
+      'is_expert': True,
+      'is_admin': users.is_current_user_admin(),
     }
-    self.Render("add_expertise.html", template_values)
+    self.Render('main.html', template_values)
     
   def post(self):
     user = users.get_current_user()
@@ -308,9 +312,10 @@ class SignUpHandler(webapp.RequestHandler):
       u.put()
     template_values = {
       'url': decorator.authorize_url(),
-      'has_credentials': decorator.has_credentials()
+      'has_credentials': decorator.has_credentials(),
+      'contents': 'sign_up.html',
     }
-    self.Render("sign_up.html", template_values)
+    self.Render('main.html', template_values)
 
 class SendInviteHandler(webapp.RequestHandler):
   """Sends an invite to the user account."""
@@ -328,8 +333,8 @@ def main():
       ('/', MainHandler),
       ('/calendarCron', CalendarCronHandler),
       ('/connect', ConnectHandler),
-      ('/manageAccount', ManageAccountHandler),
-      ('/manageAccount/addExpertise', AddExpertiseHandler),
+      ('/manageAccount', AddExpertiseHandler),
+      # ('/manageAccount/addExpertise', AddExpertiseHandler),
       ('/sendInvite', SendInviteHandler),
       ('/signUp', SignUpHandler),
       (decorator.callback_path, decorator.callback_handler()),
