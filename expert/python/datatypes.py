@@ -36,6 +36,7 @@ class User(db.Model):
   plus_page = db.LinkProperty()
   is_subscribed = db.BooleanProperty()
   is_expert = db.BooleanProperty()
+  busy_time = db.StringProperty()
   
   def __init__(self, *args, **kwargs):
     """Constructor."""

@@ -13,11 +13,14 @@
 # limitations under the License.
 
 import datetime
+import json
 import logging
 import os
 import re
 import sys
 import wsgiref.handlers
+
+from datetime import datetime, timedelta
 
 from google.appengine.api import channel
 from google.appengine.api import memcache
@@ -143,13 +146,31 @@ class ManageAccountHandler(webapp.RequestHandler):
         logging.error(calendar['summary'])
       except AccessTokenRefreshError:
         self.redirect('/manageAccount')
-    # request = calendar_service.freebusy().query(body='{ "timeMax": "2012-08-24T00:00:00Z", "timeMin": "2012-08-23T00:00:00Z"}')
-    # logging.error(request)
-    # logging.error(request.body)
-    # 
-    # response = request.execute()
-    # logging.error(response)
+        return
     
+    # Put this in a chron job to refresh all user's calendar daily
+    try:
+      email = 'charleschen@google.com'
+      http = decorator.http()
+      now = datetime.utcnow().replace(microsecond=0)
+      tomorrow = now + timedelta(days=1)
+      body = {}
+      body['timeMax'] = tomorrow.isoformat() + 'Z'
+      body['timeMin'] = now.isoformat() + 'Z'
+      body['items'] = [{'id': email}]
+      response = calendar_service.freebusy().query(body=body).execute(http=http)
+      logging.error(response)
+      if response.get('calendars') and response['calendars'].get(email) and response['calendars'][email].get('busy') and not response['calendars'][email].get('errors'):
+        # Store the busy schedule
+        logging.error('storing busy schedule')
+        u.busy_time = json.dumps(response['calendars'][email]['busy'])
+        u.put()
+        
+      logging.error(calendar_service.calendarList().list().execute(http=http))
+    except AccessTokenRefreshError:
+      self.redirect('/manageAccount')
+      return
+
     user_listed_categories = [category.key().name() for category in u.get_categories()]
     template_values = {
       'empty_list': len(user_listed_categories) == 0,
