@@ -21,7 +21,7 @@
   <div id="titlebar">
 
     <!-- title of the app -->
-    <span id="title">Expert Connect</span>
+    <img id="corp" src="/static/corp.png"/>
     
     <!-- options that the user has -->
     <span id="options">
@@ -61,6 +61,13 @@
       
     </div>
     <div id="column-2" class="test-blue">
+
+      {% if not user.is_subscribed %}
+      <div class="warning">
+      	Expert Connect is unable to contact you via chat.<br>
+      	Please verify that you have completed step 2 on the <a href="/signUp">sign up</a> page.
+      </div>
+      {% endif %}
 
       <div id="main-contents-parent">
         <!-- divs in the holding pen with id="main-contents" go here -->
