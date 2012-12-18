@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import datetime
-import json
 import logging
 import os
 import re
@@ -21,7 +20,7 @@ import sys
 import wsgiref.handlers
 
 from datetime import datetime, timedelta
-
+from django.utils import simplejson as json
 from google.appengine.api import channel
 from google.appengine.api import memcache
 from google.appengine.api import users
@@ -40,7 +39,7 @@ import httplib2
 from apiclient.discovery import build
 from apiclient.discovery import build_from_document
 from datatypes import Category, Client, User, UserToCategory
-from oauth2client.appengine import oauth2decorator_from_clientsecrets
+from oauth2client.appengine import oauth2decorator_from_clientsecrets, CredentialsModel, StorageByKeyName
 from oauth2client.client import AccessTokenRefreshError
 
 DEV_SERVER = os.environ['SERVER_SOFTWARE'].find('Development') >= 0
@@ -101,7 +100,11 @@ class MainHandler(webapp.RequestHandler):
       is_expert = u.is_expert
     categories = []
     for category in Category.all():
-      experts = tuple(category.get_experts())
+      experts = tuple([(expert, expert.is_available_for_hangout()) for expert in category.get_experts()])
+      # for expert in category.get_experts():
+      #   if expert.is_available_for_hangout():
+      #     experts.append(expert)
+      logging.info(experts)
       if experts:
         categories.append((category, experts))
     self.Render("main.html", {
@@ -132,8 +135,10 @@ class ManageAccountHandler(webapp.RequestHandler):
     if not u.is_expert:
       try:
         http = decorator.http()
+        
+        # Query the plus service for the user's name, profile picture, and profile url
         me = service.people().get(userId='me').execute(http=http)
-        logging.error(me)
+        logging.info(me)
         if me.get('image') and me['image'].get('url'):          
           u.profile_pic = me['image']['url']
         if me.get('displayName'):
@@ -141,35 +146,27 @@ class ManageAccountHandler(webapp.RequestHandler):
         if me.get('url'):
           u.plus_page = me['url']
         u.is_expert = True
+
+        # Query the calendar service for the user's busy schedule
+        email = user.email()
+        now = datetime.utcnow().replace(microsecond=0)
+        tomorrow = now + timedelta(days=1)
+        body = {}
+        body['timeMax'] = tomorrow.isoformat() + 'Z'
+        body['timeMin'] = now.isoformat() + 'Z'
+        body['items'] = [{'id': email}]
+        response = calendar_service.freebusy().query(body=body).execute(http=http)
+        logging.info(response)
+        if response.get('calendars') and response['calendars'].get(email) and response['calendars'][email].get('busy') and not response['calendars'][email].get('errors'):
+          # Store the busy schedule
+          logging.info('storing busy schedule')
+          u.busy_time = json.dumps(response['calendars'][email]['busy'])
         u.put()
-        calendar = calendar_service.calendars().get(calendarId='primary').execute(http=http)
-        logging.error(calendar['summary'])
+        # calendar = calendar_service.calendars().get(calendarId='primary').execute(http=http)
+        # logging.error(calendar['summary'])
       except AccessTokenRefreshError:
         self.redirect('/manageAccount')
         return
-    
-    # Put this in a chron job to refresh all user's calendar daily
-    try:
-      email = 'charleschen@google.com'
-      http = decorator.http()
-      now = datetime.utcnow().replace(microsecond=0)
-      tomorrow = now + timedelta(days=1)
-      body = {}
-      body['timeMax'] = tomorrow.isoformat() + 'Z'
-      body['timeMin'] = now.isoformat() + 'Z'
-      body['items'] = [{'id': email}]
-      response = calendar_service.freebusy().query(body=body).execute(http=http)
-      logging.error(response)
-      if response.get('calendars') and response['calendars'].get(email) and response['calendars'][email].get('busy') and not response['calendars'][email].get('errors'):
-        # Store the busy schedule
-        logging.error('storing busy schedule')
-        u.busy_time = json.dumps(response['calendars'][email]['busy'])
-        u.put()
-        
-      logging.error(calendar_service.calendarList().list().execute(http=http))
-    except AccessTokenRefreshError:
-      self.redirect('/manageAccount')
-      return
 
     user_listed_categories = [category.key().name() for category in u.get_categories()]
     template_values = {
@@ -179,6 +176,37 @@ class ManageAccountHandler(webapp.RequestHandler):
       'logout': users.create_logout_url("/"),
     }
     self.Render("manage_account.html", template_values)
+
+class CalendarCronHandler(webapp.RequestHandler):
+  """For each expert, refresh calendar busy_time."""
+
+  def get(self):
+    for u in User.all().fetch(1000):
+      # Check if this user is an expert and has an id
+      if u.user_id and u.is_expert:
+        credentials = StorageByKeyName(
+          CredentialsModel, u.user_id, 'credentials').get()
+        if credentials is not None and not credentials.invalid:
+          try:
+            email = u.email
+            # Authorize takes care of refreshing an expired token
+            http = credentials.authorize(httplib2.Http())
+            now = datetime.utcnow().replace(microsecond=0)
+            tomorrow = now + timedelta(days=1)
+            body = {}
+            body['timeMax'] = tomorrow.isoformat() + 'Z'
+            body['timeMin'] = now.isoformat() + 'Z'
+            body['items'] = [{'id': email}]
+            response = calendar_service.freebusy().query(body=body).execute(http=http)
+            logging.info(response)
+            if response.get('calendars') and response['calendars'].get(email) and response['calendars'][email].get('busy') and not response['calendars'][email].get('errors'):
+              # Store the busy schedule
+              logging.info('storing busy schedule')
+              u.busy_time = json.dumps(response['calendars'][email]['busy'])
+              u.put()
+          except AccessTokenRefreshError:
+            logging.error('AccessTokenRefreshError for user id ' + u.user_id)            
+            continue
 
 class AddExpertiseHandler(webapp.RequestHandler):
   """Presents a page for the user to sign up for expert categories."""
@@ -213,8 +241,8 @@ class AddExpertiseHandler(webapp.RequestHandler):
       return
     u = User.get_by_key_name(user.email())
     if u == None:
-      u = User(email=user.email())
-      u.put()
+      self.redirect(users.create_login_url("/manageAccount"))
+      return
     utoc = UserToCategory.all()
     utoc.filter("user =", u)
     for existing_utoc in utoc.fetch(100):
@@ -264,6 +292,7 @@ class SignUpHandler(webapp.RequestHandler):
     u = User.get_by_key_name(user.email())
     if u == None:
       u = User(email=user.email())
+      u.user_id = user.user_id()
       u.put()
     template_values = {
       'url': decorator.authorize_url(),
@@ -285,6 +314,7 @@ class SendInviteHandler(webapp.RequestHandler):
 def main():
   handlers = [
       ('/', MainHandler),
+      ('/calendarCron', CalendarCronHandler),
       ('/connect', ConnectHandler),
       ('/manageAccount', ManageAccountHandler),
       ('/manageAccount/addExpertise', AddExpertiseHandler),

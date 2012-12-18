@@ -22,6 +22,10 @@ handlers:
   login: admin
   script: guru.py
 
+- url: /calendarCron
+  # login: admin
+  script: guru.py
+
 - url: /.*
   script: guru.py
 

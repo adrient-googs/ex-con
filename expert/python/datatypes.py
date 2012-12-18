@@ -1,3 +1,5 @@
+from datetime import datetime
+from django.utils import simplejson as json
 from google.appengine.api import channel
 from google.appengine.ext import db
 from google.appengine.ext import webapp
@@ -27,6 +29,7 @@ class Category(db.Model):
     
 class User(db.Model):
   email = db.StringProperty(required=True)
+  user_id = db.StringProperty()
   name = db.StringProperty()
   show = db.StringProperty()
   show_time = db.DateTimeProperty()
@@ -58,6 +61,16 @@ class User(db.Model):
     assert category
     key_name = UserToCategory.get_key_name(self.email, category.name)
     pair = UserToCategory.get_or_insert(key_name, user=self, category=category)
+  
+  def is_available_for_hangout(self):
+    """Returns if the user is available for hangout. Checks if the user is available in chat and is not busy (schedule-wise)."""
+    if not self.is_available or not self.busy_time:
+      return False
+    now = datetime.utcnow().replace(microsecond=0)
+    for event in json.loads(self.busy_time):
+      if datetime.strptime(event['start'], "%Y-%m-%dT%H:%M:%SZ") < now and datetime.strptime(event['end'], "%Y-%m-%dT%H:%M:%SZ") > now:
+        return False
+    return True
 
 class UserToCategory(db.Model):
   user = db.ReferenceProperty(User, required=True)

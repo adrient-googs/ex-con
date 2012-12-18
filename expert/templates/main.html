@@ -70,9 +70,9 @@
         </a>
 
         <!-- write out the experts with this category -->
-        {% for user in category_pair.1 %}
+        {% for user_pair in category_pair.1 %}
           <div class="expert">
-            {% if user.is_available %}
+            {% if user_pair.1 %}
               <a class="hangoutlink" href="/connect?user={{user.email}}">
                 <img src="static/hangout-button.png"
                   alt="Start a Hangout"
@@ -87,17 +87,17 @@
             {% endif %}
                               
             <div class="picturecolumn">
-              <img class="profile" src="{{user.profile_pic}}"/>
+              <img class="profile" src="{{user_pair.0.profile_pic}}"/>
             </div>
             <div class="detailcolumn">
               <div class="username">
-                {% if user.name %}
-                  {{ user.name }}
+                {% if user_pair.0.name %}
+                  {{ user_pair.0.name }}
                 {% else %}
-                  {{ user.email }}
+                  {{ user_pair.0.email }}
                 {% endif %}</div>
               <div class="status">
-                {% if user.is_available %}
+                {% if user_pair.1 %}
                   <img src="/static/cleardot.gif" class="avail">
                   available
                 {% else %}
@@ -109,9 +109,8 @@
           </div>
         {% endfor %}
       {% endfor %}
-<<<<<<< HEAD
-    {% endfor %}
-  </div>
+    </div> <!-- main column -->  
+  </div> <!-- center column -->
 	<script type="text/javascript" src="/_ah/channel/jsapi"></script>
 	<script type="text/javascript" src="/static/main.js"></script>
   <script>
@@ -122,9 +121,5 @@
     socket.onerror = onError;
     socket.onclose = onClose;
   </script>
-=======
-    </div> <!-- main column -->  
-  </div> <!-- center column -->
->>>>>>> d4ca822eff70456e34c1c832c6f07e49a4ecf62e
 </body>
 </html>

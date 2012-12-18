@@ -89,6 +89,8 @@ def addDefaultUsers(out):
     new_user = User.get_or_insert(new_email, email=new_email)
     out.write('adding new user: %s / %s\n' % (new_email, profile_pic))
     new_user.profile_pic = profile_pic
+    new_user.is_available = True
+    new_user.busy_time = '[]'
     new_user.put()
     # out.write('Got user "%s"\n' % new_user.email)
     # out.write('Added profile pic: "%s"\n' % new_user.profile_pic)
