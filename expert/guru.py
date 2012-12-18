@@ -312,9 +312,10 @@ class SignUpHandler(webapp.RequestHandler):
       u.put()
     template_values = {
       'url': decorator.authorize_url(),
-      'has_credentials': decorator.has_credentials()
+      'has_credentials': decorator.has_credentials(),
+      'contents': 'sign_up.html',
     }
-    self.Render("sign_up.html", template_values)
+    self.Render('main.html', template_values)
 
 class SendInviteHandler(webapp.RequestHandler):
   """Sends an invite to the user account."""

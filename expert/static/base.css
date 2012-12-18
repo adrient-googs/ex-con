@@ -160,11 +160,12 @@ div#column-2 div.expert div.status {
 }
 
 div.warning {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  margin-left: -150pt;
   text-align: center;
   color: white;
-  margin-bottom: 20px;
-  margin-left: auto;
-  margin-right: auto;
   background-color: rgb(255, 50, 50);
   width: 300pt;
   padding: 10pt;
