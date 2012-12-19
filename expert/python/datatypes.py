@@ -23,9 +23,9 @@ class Category(db.Model):
     db.Model.__init__(self, key_name=kwargs['name'], **kwargs)
     
   def get_experts(self):
-    """Returns all users associated with this Category."""
+    """Returns all expert users associated with this Category."""
     return [pair.user
-      for pair in AreaOfExpertise.all().filter('category =', self)]
+      for pair in AreaOfExpertise.all().filter('category =', self) if pair.user.is_expert]
     
 class User(db.Model):
   email = db.StringProperty(required=True)
@@ -64,8 +64,12 @@ class User(db.Model):
     category = Category.all().filter('name =', category_name).get()
     assert category
     key_name = AreaOfExpertise.get_key_name(self.email, category.name)
-    pair = AreaOfExpertise.get_or_insert(key_name, user=self,
-      category=category, description=category_description)
+    if not AreaOfExpertise.get_by_key_name(key_name):
+      aoe = AreaOfExpertise(key_name=key_name, user=self,
+        category=category, description=category_description)
+      aoe.put()
+    # pair = AreaOfExpertise.get_or_insert(key_name, user=self,
+    #   category=category, description=category_description)
   
   def is_available_for_hangout(self):
     """Returns if the user is available for hangout. Checks if the user is available in chat and is not busy (schedule-wise)."""

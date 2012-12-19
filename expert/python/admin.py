@@ -28,6 +28,16 @@ class AdminHandler(webapp.RequestHandler):
     }
     self.Render('main.html', template_values)
 
+  def post(self):
+    # add category
+    add_category = self.request.get("add").lower()
+    if add_category and add_category != "":
+      # Disallow empty category names
+      if not Category.get_by_key_name(add_category):
+        category = Category(name=add_category)
+        category.put()
+    self.redirect('/admin')
+
 @handlers.text_handler
 def addDefaultCategories(out):
   """Adds default categories for the appengine datastore."""
@@ -52,7 +62,7 @@ def tryAddingTwoOfTheSameCategory(out):
   category_name = 'cooking'
 
   def printAllWithName():
-    """Prints all categoires with name category_name."""
+    """Prints all categories with name category_name."""
     out.write('Getting all categories with name "%s."\n' % category_name)
     categories = Category.all().filter('name =', category_name).fetch(limit=100)
     # categories = Category.all().fetch(limit=100)
@@ -93,11 +103,12 @@ def addDefaultUsers(out):
     out.write('adding new user: %s / %s\n' % (new_email, profile_pic))
     new_user.profile_pic = profile_pic
     new_user.is_available = True
+    new_user.is_expert = new_email != 'charleschen@google.com'
     new_user.busy_time = '[]'
     new_user.put()
     # out.write('Got user "%s"\n' % new_user.email)
     # out.write('Added profile pic: "%s"\n' % new_user.profile_pic)
-    new_user.add_category('cooking', 'fake cooking description')
+    new_user.add_category('arts & crafts', 'fake sub-category')
     # for category in new_user.get_categories():
     #   out.write(' - %s\n' % category.name)
 
@@ -107,7 +118,18 @@ def addSourcedExperts(out):
   with open(os.path.join(os.path.dirname(__file__), 'sourced_experts.csv'), 'r') as f:
     reader = csv.reader(f)
     for row in reader:
-        logging.error(row)
+      category = row[0]
+      email = row[1] + "@google.com"
+      sub_category = row[2]
+      if not sub_category:
+        continue
+      u = User.get_or_insert(email, email=email)
+      if not Category.get_by_key_name(category):
+        c = Category(name=category)
+        c.put()
+        out.write('Added new category %s\n' % category)
+      u.add_category(category, sub_category)
+      out.write('-- Added user %s category %s sub-category %s\n' % (email, category, sub_category))
 
 @handlers.text_handler
 def quickDisplayCategories(out):

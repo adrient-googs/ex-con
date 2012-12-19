@@ -1,9 +1,13 @@
 <div id="main-contents">
 
-
-<ul>
-  {% for func in adminFuncs %}
-    <li><a href="/admin/{{ func.0 }}">{{ func.1 }}</a>.</li>
-  {% endfor %}
-</ul>
+  Admin tasks:
+  <ul>
+    {% for func in adminFuncs %}
+      <li><a href="/admin/{{ func.0 }}">{{ func.1 }}</a>.</li>
+    {% endfor %}
+  </ul>
+  <form id="add-category" method="POST" action="/admin">
+  	Add Category: <input type="text" name="add"/><input type="submit"/>
+  </form>
+  
 </div>
