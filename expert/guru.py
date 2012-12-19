@@ -183,7 +183,7 @@ class AddExpertiseHandler(webapp.RequestHandler):
   """Presents a page for the user to sign up for expert categories."""
 
   def Render(self, template_file, template_values):
-    path = os.path.join(os.path.dirname(__file__), 'templates', template_file)
+    path = os.path.join(os.path.dirname(__file__), 'templates', template_file)    
     self.response.out.write(template.render(path, template_values))
 
   @decorator.oauth_required
@@ -232,18 +232,26 @@ class AddExpertiseHandler(webapp.RequestHandler):
         self.redirect('/manageAccount')
         return
         
-    # figure out which areas of expertise were set
-    logging.warning('this is a WARNING warning')
-    user_areas = u.get_areas_of_expertise() # TODO: CHANGE THIS TO A DICT
+    # get the areas of expertise for this user
+    user_areas = u.get_areas_of_expertise()
+    user_areas_dict = dict((area.category.name, area) for area in user_areas)
+
+    # construct a data structure of all categorie
     all_categories = []
     for category in Category.all():
-      all_categories.append({
-          'checked': False,
-          'name': category.name,
-          'description': 'blah', # category.name,
-      })
+      category_data = {
+        'checked': False,
+        'name': category.name,
+        'description': category.name,      
+      }
+      if category.name in user_areas_dict:
+        category_data['checked'] = True
+        category_data['description'] = \
+          user_areas_dict[category.name].description
+      all_categories.append(category_data)
+      
+    # this is what we pass to the templating engine
     template_values = {
-      'display_this': (str(map(id, user_areas)) + "blah blah blah"),
       'all_categories': all_categories,
       'user': u,
       'logout': users.create_logout_url("/"),
@@ -274,14 +282,14 @@ class AddExpertiseHandler(webapp.RequestHandler):
         description = self.request.get('%s description' % category.name)
         u.add_category(category.name, description)
         
-    # # add the other category
-    # other_category = self.request.get("other").lower()
-    # if other_category and other_category != "" and other_category != "other":
-    #   # Disallow empty category names and the "other" category name
-    #   if not Category.get_by_key_name(other_category):
-    #     category = Category(name=other_category)
-    #     category.put()
-    #     u.add_category(other_category, other_category)
+    # add the other category
+    other_category = self.request.get("other").lower()
+    if other_category and other_category != "" and other_category != "other":
+      # Disallow empty category names and the "other" category name
+      if not Category.get_by_key_name(other_category):
+        category = Category(name=other_category)
+        category.put()
+        u.add_category(other_category, other_category)
     
     # do the opt out stuff
     if self.request.get("expertoptout") != 'true':
