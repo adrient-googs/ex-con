@@ -1,6 +1,7 @@
 <div id="main-contents">
 
   <a class="category">Settings</a>
+  <form id="manage-expertise" method="POST" action="/manageAccount">
   <input class="checkbox" type="checkbox" name="expertoptout" value="true"
     {% if not user.expert_opt_out %}
 		  checked
@@ -9,8 +10,6 @@
   <br>
 
   <a class="category">My Areas of Expertise</a>
-
-  <form id="manage-expertise" method="POST" action="/manageAccount">
   {% for category in all_categories %}
     <input
       id="{{category.name|slugify}}-input"

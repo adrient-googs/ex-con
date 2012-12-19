@@ -65,7 +65,7 @@ class User(db.Model):
   
   def is_available_for_hangout(self):
     """Returns if the user is available for hangout. Checks if the user is available in chat and is not busy (schedule-wise)."""
-    if not self.is_available or not self.busy_time:
+    if not self.is_available or not self.busy_time or self.expert_opt_out:
       return False
     now = datetime.utcnow().replace(microsecond=0)
     for event in json.loads(self.busy_time):

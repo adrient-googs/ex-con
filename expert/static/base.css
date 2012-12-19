@@ -59,7 +59,7 @@ div#column-container {
 }
 
 div#column-1 {
-  width: 120px;
+  width: 150px;
   float: left;
   font-family: arial,sans-serif;
 }
@@ -99,7 +99,7 @@ div#column-1 div#mini-navigation {
 }
 
 div#column-2 {
-  width: 680px;
+  width: 650px;
   float: right;
 }
 
@@ -191,6 +191,10 @@ form#manage-expertise div.sub-category {
   font-size: 13px;
   margin-left: 27px;
   margin-bottom: 2px;
+}
+
+div#userfeedback {
+  margin-top: 20px;
 }
 
 input.submitbutton {
