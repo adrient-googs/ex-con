@@ -100,19 +100,22 @@ class MainHandler(webapp.RequestHandler):
       is_expert = u.is_expert
     categories = []
     for category in Category.all():
-      experts = tuple([(expert, expert.is_available_for_hangout()) for expert in category.get_experts()])
-      # for expert in category.get_experts():
-      #   if expert.is_available_for_hangout():
-      #     experts.append(expert)
-      logging.info(experts)
-      if experts:
-        categories.append((category, experts))
+      areas = category.get_areas_of_expertise()
+      if areas:
+        area_data = [{
+          'user_name' : area.user.get_name(),
+          'user_email' : area.user.email,
+          'user_profile_pic' : area.user.profile_pic,
+          'user_available' : area.user.is_available_for_hangout(),
+          'description' : area.description.title(),
+        } for area in areas]
+        categories.append({'name':category.name, 'areas':area_data})
     self.Render("main.html", {
       'user': u,
       'contents': 'expert_list.html',
       'token': token,
       'is_expert': is_expert,
-      'categories': tuple(categories),
+      'categories': categories,
       'login': users.create_login_url("/"),
       'logout': users.create_logout_url("/"),
       'is_admin': users.is_current_user_admin(),

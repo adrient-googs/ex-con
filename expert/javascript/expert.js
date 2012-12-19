@@ -60,7 +60,6 @@ Useful Utilities
   };
 
   $(function() {
-    console.log('seriously, hello world!');
     return move_out_of_holding_pen();
   });
 

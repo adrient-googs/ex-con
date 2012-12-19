@@ -116,23 +116,47 @@ div#column-2 div.add {
   text-align: center;
 }
 
-div#column-2 div.expert {
+div#expert-list div.expert {
   height: 50px;
   margin-left: 10px;
   margin-bottom: 10px;
   position: relative;
 }
 
+div#column-2 div.expert img.profile {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  height: 43px;
+}
+
+div#expert-list div.expert div.description {
+  position: absolute;
+  left: 40px;
+  top: 0px;
+  font-size: 17pt;
+}
+
+div#expert-list div.expert div.user-name {
+  position: absolute;
+  left: 40px;
+  top: 25px;
+  font-size: 13pt;
+  color: rgb(151, 143, 143);
+}
+
+div#expert-list div.expert img.hangout {
+  float: right;
+  left: 0px;
+  top: 3px;
+  width: 86px;
+}
+
 div#column-2 div.expert a.hangoutlink {
-  float: left;
+  float: right;
   position: relative;
 }
 
-div#column-2 div.expert img.hangout {
-  left: 0px;
-  margin-top: 3px;
-  width: 86px;
-}
 
 div#column-2 div.expert div.picturecolumn {
   margin-left: 10px;
@@ -141,9 +165,7 @@ div#column-2 div.expert div.picturecolumn {
   width: 50px;
 }
 
-div#column-2 div.expert img.profile {
-  height: 43px;
-}
+
 
 div#column-2 div.expert div.detailcolumn {
   float: left;

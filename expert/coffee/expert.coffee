@@ -1,7 +1,5 @@
 # main function - execution starts here
 $ ->
-  console.log 'seriously, hello world!'
-  
   # move the contents out of the holding pen so the user can see it
   move_out_of_holding_pen()
   

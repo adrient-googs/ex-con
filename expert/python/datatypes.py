@@ -24,8 +24,12 @@ class Category(db.Model):
     
   def get_experts(self):
     """Returns all users associated with this Category."""
-    return [pair.user
-      for pair in AreaOfExpertise.all().filter('category =', self)]
+    return [area.user for area in self.get_areas_of_expertise()]
+
+  def get_areas_of_expertise(self):
+    """Returns all the areas of expertise associated with this category."""
+    return [area for area in AreaOfExpertise.all().filter('category =', self)]
+
     
 class User(db.Model):
   email = db.StringProperty(required=True)
@@ -76,6 +80,13 @@ class User(db.Model):
       if datetime.strptime(event['start'], "%Y-%m-%dT%H:%M:%SZ") < now and datetime.strptime(event['end'], "%Y-%m-%dT%H:%M:%SZ") > now:
         return False
     return True
+    
+  def get_name(self):
+    """Returns the user's name (falling back on e-mail if necessary.)"""
+    if self.name:
+      return self.name
+    else:
+      return self.email
 
 class AreaOfExpertise(db.Model):
   user = db.ReferenceProperty(User, required=True)
