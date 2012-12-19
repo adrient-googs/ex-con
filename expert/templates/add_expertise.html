@@ -1,4 +1,5 @@
 <div id="main-contents">
+
   <a class="category">Settings</a>
   <input class="checkbox" type="checkbox" name="expertoptout" value="true"
     {% if not user.expert_opt_out %}
@@ -6,15 +7,33 @@
 	  {% endif %}>Let others hang out with me<br>
   <div class="information">(We will only show you as available when your calendar is free)</div>
   <br>
+
   <a class="category">My Areas of Expertise</a>
-  <form method="POST" action="/manageAccount">
+
+  <form id="manage-expertise" method="POST" action="/manageAccount">
   {% for category in all_categories %}
-    <input class="checkbox" type="checkbox" name="{{category.name}}" value="true"
-		{% if category.checked %}
-			checked
-		{% endif %}>{{category.name|title}}<br>
+    <input
+      id="{{category.name|slugify}}-input"
+      class="checkbox"
+      type="checkbox"
+      name="{{category.name}}"
+      value="true"
+      onclick="category_checked('category_id')"
+  		{% if category.checked %}
+  			checked
+  		{% endif %}
+		/> {{category.name|title}}
+		<div class="sub-category">
+		  Subcategory:
+		  <input
+		    id="{{category.name|slugify}}-description"
+		    type="text"
+		    name="{{category.name}} description"
+		/>
+	  </div>
   {% endfor %}
 	Other: <input type="text" name="other"><br><br>
 	<input class="submitbutton" type="submit">
   </form>
+
 </div>

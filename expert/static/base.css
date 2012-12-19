@@ -186,6 +186,13 @@ div.information {
   margin-left: 20px;
 }
 
+form#manage-expertise div.sub-category { 
+  color: rgb(50, 50, 51);
+  font-size: 13px;
+  margin-left: 27px;
+  margin-bottom: 2px;
+}
+
 input.submitbutton {
   border: 1px solid #777777;
   background: #4D90FE;

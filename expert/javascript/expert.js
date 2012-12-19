@@ -3,6 +3,7 @@
   var move_out_of_holding_pen, show_debug_colors;
 
   $(function() {
+    console.log('seriously, hello world!');
     return move_out_of_holding_pen();
   });
 
@@ -25,6 +26,10 @@
       }));
     }
     return _results;
+  };
+
+  this.category_checked = function(event) {
+    return console.log(event);
   };
 
 }).call(this);
