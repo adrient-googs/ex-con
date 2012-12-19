@@ -135,51 +135,15 @@ class ManageAccountHandler(webapp.RequestHandler):
     if u == None:
       self.redirect('/signUp')
       return
-    if not u.is_expert:
-      try:
-        http = decorator.http()
-        
-        # Query the plus service for the user's name, profile picture, and profile url
-        me = service.people().get(userId='me').execute(http=http)
-        logging.info(me)
-        if me.get('image') and me['image'].get('url'):          
-          u.profile_pic = me['image']['url']
-        if me.get('displayName'):
-          u.name = me['displayName']
-        if me.get('url'):
-          u.plus_page = me['url']
-        u.is_expert = True
-
-        # Query the calendar service for the user's busy schedule
-        email = user.email()
-        now = datetime.utcnow().replace(microsecond=0)
-        tomorrow = now + timedelta(days=1)
-        body = {}
-        body['timeMax'] = tomorrow.isoformat() + 'Z'
-        body['timeMin'] = now.isoformat() + 'Z'
-        body['items'] = [{'id': email}]
-        response = calendar_service.freebusy().query(body=body).execute(http=http)
-        logging.info(response)
-        if response.get('calendars') and response['calendars'].get(email) and response['calendars'][email].get('busy') and not response['calendars'][email].get('errors'):
-          # Store the busy schedule
-          logging.info('storing busy schedule')
-          u.busy_time = json.dumps(response['calendars'][email]['busy'])
-        u.put()
-        # calendar = calendar_service.calendars().get(calendarId='primary').execute(http=http)
-        # logging.error(calendar['summary'])
-      except AccessTokenRefreshError:
-        self.redirect('/manageAccount')
-        return
 
     user_listed_categories = [category.key().name() for category in u.get_categories()]
     template_values = {
       'contents': 'manage_account.html',
-      'is_expert': True,
       'empty_list': len(user_listed_categories) == 0,
       'user_listed_categories': user_listed_categories,
       'user': u,
       'logout': users.create_logout_url("/"),
-      'is_expert': True,
+      'is_expert': u.is_expert,
       'is_admin': users.is_current_user_admin(),
     }
     self.Render("main.html", template_values)
@@ -232,6 +196,41 @@ class AddExpertiseHandler(webapp.RequestHandler):
     if u == None:
       self.redirect(users.create_login_url("/manageAccount"))
       return
+    if not u.is_expert:
+      try:
+        http = decorator.http()
+        
+        # Query the plus service for the user's name, profile picture, and profile url
+        me = service.people().get(userId='me').execute(http=http)
+        logging.info(me)
+        if me.get('image') and me['image'].get('url'):          
+          u.profile_pic = me['image']['url']
+        if me.get('displayName'):
+          u.name = me['displayName']
+        if me.get('url'):
+          u.plus_page = me['url']
+        u.is_expert = True
+
+        # Query the calendar service for the user's busy schedule
+        email = user.email()
+        now = datetime.utcnow().replace(microsecond=0)
+        tomorrow = now + timedelta(days=1)
+        body = {}
+        body['timeMax'] = tomorrow.isoformat() + 'Z'
+        body['timeMin'] = now.isoformat() + 'Z'
+        body['items'] = [{'id': email}]
+        response = calendar_service.freebusy().query(body=body).execute(http=http)
+        logging.info(response)
+        if response.get('calendars') and response['calendars'].get(email) and response['calendars'][email].get('busy') and not response['calendars'][email].get('errors'):
+          # Store the busy schedule
+          logging.info('storing busy schedule')
+          u.busy_time = json.dumps(response['calendars'][email]['busy'])
+        u.put()
+        # calendar = calendar_service.calendars().get(calendarId='primary').execute(http=http)
+        # logging.error(calendar['summary'])
+      except AccessTokenRefreshError:
+        self.redirect('/manageAccount')
+        return
     user_listed_categories = [category.key().name() for category in u.get_categories()]
     all_categories = [{'checked': category.key().name() in user_listed_categories, 'name': category.name} for category in Category.all().fetch(100)]
     template_values = {
@@ -239,7 +238,7 @@ class AddExpertiseHandler(webapp.RequestHandler):
       'user': u,
       'logout': users.create_logout_url("/"),
       'contents': 'add_expertise.html',
-      'is_expert': True,
+      'is_expert': u.is_expert,
       'is_admin': users.is_current_user_admin(),
     }
     self.Render('main.html', template_values)
@@ -269,6 +268,9 @@ class AddExpertiseHandler(webapp.RequestHandler):
         u.add_category(other_category)
     if self.request.get("expertoptout") != 'true':
       u.expert_opt_out = True
+      u.put()
+    else:
+      u.expert_opt_out = False
       u.put()
     self.redirect("/manageAccount")
 

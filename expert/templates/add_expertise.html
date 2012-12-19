@@ -1,5 +1,6 @@
 <div id="main-contents">
   <a class="category">Settings</a>
+  <form method="POST" action="/manageAccount">
   <input class="checkbox" type="checkbox" name="expertoptout" value="true"
     {% if not user.expert_opt_out %}
 		  checked
@@ -7,7 +8,6 @@
   <div class="information">(We will only show you as available when your calendar is free)</div>
   <br>
   <a class="category">My Areas of Expertise</a>
-  <form method="POST" action="/manageAccount">
   {% for category in all_categories %}
     <input class="checkbox" type="checkbox" name="{{category.name}}" value="true"
 		{% if category.checked %}

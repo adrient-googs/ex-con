@@ -186,6 +186,10 @@ div.information {
   margin-left: 20px;
 }
 
+div#userfeedback {
+  margin-top: 20px;
+}
+
 input.submitbutton {
   border: 1px solid #777777;
   background: #4D90FE;
