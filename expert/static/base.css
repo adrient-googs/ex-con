@@ -181,6 +181,11 @@ div.indent {
   margin-left: 20px;
 }
 
+div.information {
+  color: #CC3333;
+  margin-left: 20px;
+}
+
 input.submitbutton {
   border: 1px solid #777777;
   background: #4D90FE;

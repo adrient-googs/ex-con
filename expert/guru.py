@@ -261,16 +261,15 @@ class AddExpertiseHandler(webapp.RequestHandler):
       if self.request.get(category.name) == 'true':
         u.add_category(category.name)
     other_category = self.request.get("other").lower()
-    logging.error("Other category")
     # Disallow empty category names and the "other" category name
     if other_category and other_category != "" and other_category != "other":
-      logging.error("Condition")
       if not Category.get_by_key_name(other_category):
-        logging.error("Adding category")
         category = Category(name=other_category)
         category.put()
         u.add_category(other_category)
-      
+    if self.request.get("expertoptout") != 'true':
+      u.expert_opt_out = True
+      u.put()
     self.redirect("/manageAccount")
 
 class ConnectHandler(webapp.RequestHandler):
