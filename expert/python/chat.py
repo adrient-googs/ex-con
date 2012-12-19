@@ -5,211 +5,32 @@ Contains all request handlers for chat.
 import datetime
 import logging
 
-from datatypes import Category, User, AreaOfExpertise
+from datatypes import Category, Client, User, AreaOfExpertise
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import xmpp_handlers
 
 MUTE_MSG = "You have muted ExpertConnect for one hour."
 REQUEST_MSG = "Your expertise is needed! Please click on the following link: %s"
-CATEGORY_MSG = "You are now listed as an expert in %s"
-PONDER_MSG = "Hmm. Let me think on that a bit."
-TELLME_MSG = "While I'm thinking, perhaps you can answer me this: %s"
-SOMEONE_ANSWERED_MSG = ("We seek those who are wise and fast. One out of two "
-                        "is not enough. Another has answered my question.")
-ANSWER_INTRO_MSG = "You asked me: %s"
-ANSWER_MSG = "I have thought long and hard, and concluded: %s"
-WAIT_MSG = ("Please! One question at a time! You can ask me another once you "
-            "have an answer to your current question.")
-THANKS_MSG = "Thank you for your wisdom."
-TELLME_THANKS_MSG = ("Thank you for your wisdom."
-                     " I'm still thinking about your question.")
-EMPTYQ_MSG = "Sorry, I don't have anything to ask you at the moment."
-HELP_MSG = ("I am the amazing Crowd Guru. Ask me a question by typing '/tellme "
-            "the meaning of life', and I will answer you forthwith! To learn "
-            "more, go to %s/")
-MAX_ANSWER_TIME = 120
-
-class Question(db.Model):
-  question = db.TextProperty(required=True)
-  asker = db.IMProperty(required=True)
-  asked = db.DateTimeProperty(required=True, auto_now_add=True)
-
-  assignees = db.ListProperty(db.IM)
-  last_assigned = db.DateTimeProperty()
-
-  answer = db.TextProperty()
-  answerer = db.IMProperty()
-  answered = db.DateTimeProperty()
-
-  @staticmethod
-  def _tryAssignTx(key, user, expiry):
-    """Assigns and returns the question if it's not assigned already.
-
-    Args:
-      key: db.Key: The key of a Question to try and assign.
-      user: db.IM: The user to assign the question to.
-    Returns:
-      The Question object. If it was already assigned, no change is made
-    """
-    question = Question.get(key)
-    if not question.last_assigned or question.last_assigned < expiry:
-      question.assignees.append(user)
-      question.last_assigned = datetime.datetime.now()
-      question.put()
-    return question
-
-  @staticmethod
-  def assignQuestion(user):
-    """Gets an unanswered question and assigns it to a user to answer.
-
-    Args:
-      user: db.IM: The identity of the user to assign a question to.
-    Returns:
-      The Question entity assigned to the user, or None if there are no
-        unanswered questions.
-    """
-    question = None
-    while question == None or user not in question.assignees:
-      # Assignments made before this timestamp have expired.
-      expiry = (datetime.datetime.now()
-                - datetime.timedelta(seconds=MAX_ANSWER_TIME))
-
-      # Find a candidate question
-      q = Question.all()
-      q.filter("answerer =", None)
-      q.filter("last_assigned <", expiry).order("last_assigned")
-      # If a question has never been assigned, order by when it was asked
-      q.order("asked")
-      candidates = [x for x in q.fetch(2) if x.asker != user]
-      if not candidates:
-        # No valid questions in queue.
-        break
-
-      # Try and assign it
-      question = db.run_in_transaction(Question._tryAssignTx,
-                                       candidates[0].key(), user, expiry)
-
-    # Expire the assignment after a couple of minutes
-    return question
-
-  def _unassignTx(self, user):
-    question = Question.get(self.key())
-    if user in question.assignees:
-      question.assignees.remove(user)
-      question.put()
-
-  def unassign(self, user):
-    """Unassigns the given user to this question.
-
-    Args:
-      user: db.IM: The user who will no longer be answering this question.
-    """
-    db.run_in_transaction(self._unassignTx, user)
-
+FACILITATOR_MSG = "A hangout is in progress. Watch the hangout via the following link: %s"
+HELP_MSG = "Manage your account at %s/manageAccount"
 
 class XmppHandler(xmpp_handlers.CommandHandler):
   """Handler class for all XMPP activity."""
-
-  def _GetAsked(self, user):
-    """Returns the user's outstanding asked question, if any."""
-    q = Question.all()
-    q.filter("asker =", user)
-    q.filter("answer =", None)
-    return q.get()
-
-  def _GetAnswering(self, user):
-    """Returns the question the user is answering, if any."""
-    q = Question.all()
-    q.filter("assignees =", user)
-    q.filter("answer =", None)
-    return q.get()
 
   def unhandled_command(self, message=None):
     # Show help text
     message.reply(HELP_MSG % (self.request.host_url,))
 
-  def askme_command(self, message=None):
-    im_from = db.IM("xmpp", message.sender)
-    currently_answering = self._GetAnswering(im_from)
-    question = Question.assignQuestion(im_from)
-    if question:
-      message.reply(TELLME_MSG % (question.question,))
-    else:
-      message.reply(EMPTYQ_MSG)
-    # Don't unassign their current question until we've picked a new one.
-    if currently_answering:
-      currently_answering.unassign(im_from)
+  # def mute_command(self, message=None):
+  #   u = User.get_or_insert(message.sender)
+  #   u.mute_time = datetime.datetime.now()
+  #   u.put()
+  #   message.reply(MUTE_MSG)
 
   def text_message(self, message=None):
-    im_from = db.IM("xmpp", message.sender)
-    question = self._GetAnswering(im_from)
-    if question:
-      other_assignees = question.assignees
-      other_assignees.remove(im_from)
-
-      # Answering a question
-      question.answer = message.arg
-      question.answerer = im_from
-      question.assignees = []
-      question.answered = datetime.datetime.now()
-      question.put()
-
-      # Send the answer to the asker
-      xmpp.send_message([question.asker.address],
-                        ANSWER_INTRO_MSG % (question.question,))
-      xmpp.send_message([question.asker.address], ANSWER_MSG % (message.arg,))
-
-      # Send acknowledgement to the answerer
-      asked_question = self._GetAsked(im_from)
-      if asked_question:
-        message.reply(TELLME_THANKS_MSG)
-      else:
-        message.reply(THANKS_MSG)
-
-      # Tell any other assignees their help is no longer required
-      if other_assignees:
-        xmpp.send_message([x.address for x in other_assignees],
-                          SOMEONE_ANSWERED_MSG)
-    else:
-      self.unhandled_command(message)
-
-  def tellme_command(self, message=None):
-    im_from = db.IM("xmpp", message.sender)
-    asked_question = self._GetAsked(im_from)
-    currently_answering = self._GetAnswering(im_from)
-
-    if asked_question:
-      # Already have a question
-      message.reply(WAIT_MSG)
-    else:
-      # Asking a question
-      asked_question = Question(question=message.arg, asker=im_from)
-      asked_question.put()
-
-      if not currently_answering:
-        # Try and find one for them to answer
-        question = Question.assignQuestion(im_from)
-        if question:
-          message.reply(TELLME_MSG % (question.question,))
-          return
-      message.reply(PONDER_MSG)
-
-  def mute_command(self, message=None):
-    u = User.get_or_insert(message.sender)
-    u.mute_time = datetime.datetime.now()
-    u.put()
-    message.reply(MUTE_MSG)
-
-  def addcategory_command(self, message=None):
-    area = AreaOfExpertise.get_or_insert()
-    c = Category.get_or_insert(message.arg)
-    u = User.get_or_insert(message.sender)
-    u.categories.append(message.arg)
-    c.users.append(user)
-    c.put()
-    u.put()
-    message.reply(CATEGORY_MSG % (message.arg,))
+    # Show help text
+    message.reply(HELP_MSG % (self.request.host_url,))
 
 class XmppSubscribeHandler(webapp.RequestHandler):
   """Handles a user subscription."""
@@ -218,7 +39,6 @@ class XmppSubscribeHandler(webapp.RequestHandler):
     sender = self.request.get('from').split('/')[0]
     logging.info('User subscribe ' + sender)
     logging.info('stanza ' + self.request.get('stanza'))
-    logging.info('body ' + self.request.get('body'))
     
 class XmppUnsubscribeHandler(webapp.RequestHandler):
   """Handles a user unsubscription."""
@@ -227,7 +47,6 @@ class XmppUnsubscribeHandler(webapp.RequestHandler):
     sender = self.request.get('from').split('/')[0]
     logging.info('User unsubscribe ' + sender)
     logging.info('stanza ' + self.request.get('stanza'))
-    logging.info('body ' + self.request.get('body'))
 
 class XmppSubscribedHandler(webapp.RequestHandler):
   """Handles a user subscription."""
@@ -241,7 +60,6 @@ class XmppSubscribedHandler(webapp.RequestHandler):
     u.put()
     logging.info('User subscribed ' + sender)
     logging.info('stanza ' + self.request.get('stanza'))
-    logging.info('body ' + self.request.get('body'))
     
 class XmppUnsubscribedHandler(webapp.RequestHandler):
   """Handles a user unsubscription."""
@@ -250,7 +68,6 @@ class XmppUnsubscribedHandler(webapp.RequestHandler):
     sender = self.request.get('from').split('/')[0]
     logging.info('User unsubscribed ' + sender)
     logging.info('stanza ' + self.request.get('stanza'))
-    logging.info('body ' + self.request.get('body'))
 
 class XmppAvailableHandler(webapp.RequestHandler):
   """Handles if a user is available."""
@@ -260,16 +77,16 @@ class XmppAvailableHandler(webapp.RequestHandler):
     u = User.get_by_key_name(sender)
     if u == None:
       u = User(email=sender)
+    previously_available = u.is_available
     u.show = self.request.get('show')
     u.show_time = datetime.datetime.now()
     u.is_available = True
     u.put()
+    if not previously_available:
+      Client.send_global_refresh()
     logging.info('User available ' + sender)
     logging.info('stanza ' + self.request.get('stanza'))
-    logging.info('body ' + self.request.get('body'))
     logging.info('show ' + self.request.get('show'))
-    logging.info('status ' + self.request.get('status'))
-    logging.info('presence ' + self.request.get('presence'))
 
 class XmppUnavailableHandler(webapp.RequestHandler):
   """Handles if a user is unavailable."""
@@ -279,11 +96,13 @@ class XmppUnavailableHandler(webapp.RequestHandler):
     u = User.get_by_key_name(sender)
     if u == None:
       u = User(email=sender)
+    previously_available = u.is_available
     u.is_available = False
     u.put()
+    if previously_available:
+      Client.send_global_refresh()
     logging.info('User unavailable ' + sender)
     logging.info('stanza ' + self.request.get('stanza'))
-    logging.info('body ' + self.request.get('body'))
 
 class XmppProbeHandler(webapp.RequestHandler):
   """Handles if a user is probing the appengine."""
@@ -292,7 +111,6 @@ class XmppProbeHandler(webapp.RequestHandler):
     sender = self.request.get('from').split('/')[0]
     logging.info('User probe ' + sender)
     logging.info('stanza ' + self.request.get('stanza'))
-    logging.info('body ' + self.request.get('body'))
 
 class XmppErrorHandler(webapp.RequestHandler):
   """Handles xmpp errors."""
@@ -315,5 +133,3 @@ def getHandlers():
     ('/_ah/xmpp/presence/unavailable/', XmppUnavailableHandler),
     ('/_ah/xmpp/presence/probe/', XmppProbeHandler),
   ]
-
-
