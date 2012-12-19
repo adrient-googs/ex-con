@@ -233,7 +233,7 @@ class AddExpertiseHandler(webapp.RequestHandler):
         return
         
     # figure out which areas of expertise were set
-    logging.warning('this is a WARNING')
+    logging.warning('this is a WARNING warning')
     user_areas = u.get_areas_of_expertise() # TODO: CHANGE THIS TO A DICT
     all_categories = []
     for category in Category.all():
@@ -243,7 +243,7 @@ class AddExpertiseHandler(webapp.RequestHandler):
           'description': 'blah', # category.name,
       })
     template_values = {
-      'display_this': (str(map(id, user_areas)) + "blah"),
+      'display_this': (str(map(id, user_areas)) + "blah blah blah"),
       'all_categories': all_categories,
       'user': u,
       'logout': users.create_logout_url("/"),

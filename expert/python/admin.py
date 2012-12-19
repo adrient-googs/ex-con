@@ -21,9 +21,10 @@ class AdminHandler(webapp.RequestHandler):
 
   def get(self):
     template_values = {
+      'contents': 'admin.html',
       'adminFuncs' : ADMIN_FUNCS,
     }
-    self.Render('admin.html', template_values)
+    self.Render('main.html', template_values)
 
 @handlers.text_handler
 def addDefaultCategories(out):

@@ -1,16 +1,9 @@
-<html>
-<head>
-  <title>ExCon Admin</title>
-  <link rel="stylesheet" type="text/css" href="/static/base.css" />
-</head>
-<body>
-  <h1>ExCon Amin</h1>
+<div id="main-contents">
 
-  <ul>
-    {% for func in adminFuncs %}
-      <li><a href="/admin/{{ func.0 }}">{{ func.1 }}</a>.</li>
-    {% endfor %}
-  </ul>
 
-</body>
-</html>
+<ul>
+  {% for func in adminFuncs %}
+    <li><a href="/admin/{{ func.0 }}">{{ func.1 }}</a>.</li>
+  {% endfor %}
+</ul>
+</div>
