@@ -3,6 +3,7 @@ Contains all the request handlers for administrative control of the
 app.
 """
 
+from __future__ import with_statement
 import csv
 import logging
 import os
@@ -126,6 +127,7 @@ def addSourcedExperts(out):
   with open(os.path.join(os.path.dirname(__file__), 'sourced_experts.csv'), 'r') as f:
     reader = csv.reader(f)
     for row in reader:
+      logging.error(row)
       category = row[0]
       email = row[1] + "@google.com"
       sub_category = row[2]
@@ -145,7 +147,7 @@ def quickDisplayCategories(out):
   for category in Category.all():
     out.write('- %s\n' % category.name)
     for user in category.get_experts():
-      out.write('  - %s\n' % user.email)
+      out.write('  - %s - available? %s\n' % (user.email, user.is_available_for_hangout()))
       
 @handlers.text_handler
 def removeAllAreasOfExpertise(out):
