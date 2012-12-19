@@ -24,8 +24,12 @@ class Category(db.Model):
     
   def get_experts(self):
     """Returns all expert users associated with this Category."""
-    return [pair.user
-      for pair in AreaOfExpertise.all().filter('category =', self) if pair.user.is_expert]
+    return [area.user
+      for area in self.get_areas_of_expertise() if area.user.is_expert]
+
+  def get_areas_of_expertise(self):
+    """Returns all the areas of expertise associated with this category."""
+    return [area for area in AreaOfExpertise.all().filter('category =', self)]
     
 class User(db.Model):
   email = db.StringProperty(required=True)
@@ -35,11 +39,11 @@ class User(db.Model):
   show_time = db.DateTimeProperty()
   is_available = db.BooleanProperty()
   mute_time = db.DateTimeProperty()
-  profile_pic = db.LinkProperty(default='https://teams.googleplex.com/_servlet/data/person_photo?personId=P1004388490')
+  profile_pic = db.LinkProperty(default='http://ssl.gstatic.com/s2/profiles/images/silhouette80.png')
   plus_page = db.LinkProperty()
   is_subscribed = db.BooleanProperty()
   is_expert = db.BooleanProperty()
-  busy_time = db.StringProperty()
+  busy_time = db.StringProperty(default="[]") # Assign a default empty array which means by default they have a free schedule.
   expert_opt_out = db.BooleanProperty()
   
   def __init__(self, *args, **kwargs):
@@ -73,13 +77,20 @@ class User(db.Model):
   
   def is_available_for_hangout(self):
     """Returns if the user is available for hangout. Checks if the user is available in chat and is not busy (schedule-wise)."""
-    if not self.is_available or not self.busy_time or self.expert_opt_out:
+    if not self.is_expert or not self.is_available or not self.busy_time or self.expert_opt_out:
       return False
     now = datetime.utcnow().replace(microsecond=0)
     for event in json.loads(self.busy_time):
       if datetime.strptime(event['start'], "%Y-%m-%dT%H:%M:%SZ") < now and datetime.strptime(event['end'], "%Y-%m-%dT%H:%M:%SZ") > now:
         return False
     return True
+    
+  def get_name(self):
+    """Returns the user's name (falling back on e-mail if necessary.)"""
+    if self.name:
+      return self.name
+    else:
+      return self.email
 
 class AreaOfExpertise(db.Model):
   user = db.ReferenceProperty(User, required=True)

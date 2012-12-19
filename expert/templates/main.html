@@ -37,9 +37,10 @@
     
     <span id="account">
       {% if is_expert %}
-        <a href="/manageAccount">Account Management</a>
+        {{user.email}}<br>
+        <a href="{{logout}}">Logout</a>
       {% else %}
-        <a href="/signUp">Sign up</a> to become an Expert!<br>
+        <a href="/signUp">Sign up</a> to become an pro!<br>
       {% endif %}
     </span>
   </div>
@@ -52,15 +53,15 @@
       <div id="title">xStop</div>
 
       <div id="pages">
-        <a class="current-page test-orange" href="/">See Experts</a>
+        <a class="current-page test-orange" href="/">Browse pros</a>
         {% if is_expert %}
-          <a class="other-page test-purple" href="/manageAccount">Manage Account</a>
+          <a class="other-page test-purple" href="/manageAccount">Manage account</a>
         {% else %}
-          <a class="other-page test-purple" href="/signUp">Sign Up</a>
+          <a class="other-page test-purple" href="/signUp">Become a pro</a>
         {% endif %}
         <!-- <div id="userfeedback"> -->
         <a class="other-page test-purple" href="https://docs.google.com/a/google.com/forms/d/1as018d-XMV9NWQRhuI8wnWfzoK54bkI4hKZyBLJK8l4/viewform">Feedback</a>
-        <a class="other-page test-purple" href="https://docs.google.com/a/google.com/forms/d/1ACzCMY5qBnAsZvGeWO_whuOtNT_PKMWH_kpPF09xq_g/viewform">Recommend an expert</a>
+        <a class="other-page test-purple" href="https://docs.google.com/a/google.com/forms/d/1ACzCMY5qBnAsZvGeWO_whuOtNT_PKMWH_kpPF09xq_g/viewform">Recommend a pro</a>
         <!-- </div> -->
         {% if is_admin %}
           <a class="other-page test-purple" href="/admin">Admin</a>

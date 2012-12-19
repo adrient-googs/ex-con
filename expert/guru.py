@@ -100,53 +100,27 @@ class MainHandler(webapp.RequestHandler):
       is_expert = u.is_expert
     categories = []
     for category in Category.all():
-      experts = tuple([(expert, expert.is_available_for_hangout()) for expert in category.get_experts()])
-      # for expert in category.get_experts():
-      #   if expert.is_available_for_hangout():
-      #     experts.append(expert)
-      logging.info(experts)
-      if experts:
-        categories.append((category, experts))
+      areas = category.get_areas_of_expertise()
+      if areas:
+        area_data = [{
+          'user_name' : area.user.get_name(),
+          'user_email' : area.user.email,
+          'user_profile_pic' : area.user.profile_pic,
+          'user_available' : area.user.is_available_for_hangout(),
+          'description' : area.description.title(),
+        } for area in areas if area.user.is_expert]
+        if area_data:
+          categories.append({'name':category.name, 'areas':area_data})
     self.Render("main.html", {
       'user': u,
       'contents': 'expert_list.html',
       'token': token,
       'is_expert': is_expert,
-      'categories': tuple(categories),
+      'categories': categories,
       'login': users.create_login_url("/"),
       'logout': users.create_logout_url("/"),
       'is_admin': users.is_current_user_admin(),
     })
-
-class ManageAccountHandler(webapp.RequestHandler):
-  """Presents an account summary page."""
-
-  def Render(self, template_file, template_values):
-    path = os.path.join(os.path.dirname(__file__), 'templates', template_file)
-    self.response.out.write(template.render(path, template_values))
-
-  @decorator.oauth_required
-  def get(self):
-    user = users.get_current_user()
-    if user == None:
-      self.redirect(users.create_login_url("/manageAccount"))
-      return
-    u = User.get_by_key_name(user.email())
-    if u == None:
-      self.redirect('/signUp')
-      return
-
-    user_listed_categories = [category.key().name() for category in u.get_categories()]
-    template_values = {
-      'contents': 'manage_account.html',
-      'empty_list': len(user_listed_categories) == 0,
-      'user_listed_categories': user_listed_categories,
-      'user': u,
-      'logout': users.create_logout_url("/"),
-      'is_expert': u.is_expert,
-      'is_admin': users.is_current_user_admin(),
-    }
-    self.Render("main.html", template_values)
 
 class CalendarCronHandler(webapp.RequestHandler):
   """For each expert, refresh calendar busy_time."""
@@ -289,15 +263,11 @@ class AddExpertiseHandler(webapp.RequestHandler):
       if not Category.get_by_key_name(other_category):
         category = Category(name=other_category)
         category.put()
-        u.add_category(other_category, other_category)
+      u.add_category(other_category, other_category)
     
     # do the opt out stuff
-    if self.request.get("expertoptout") != 'true':
-      u.expert_opt_out = True
-      u.put()
-    else:
-      u.expert_opt_out = False
-      u.put()
+    u.expert_opt_out = self.request.get("expertoptout") != 'true'
+    u.put()
     self.redirect("/manageAccount")
 
 class ConnectHandler(webapp.RequestHandler):
@@ -306,9 +276,11 @@ class ConnectHandler(webapp.RequestHandler):
   def get(self):
     user = self.request.get('user')
     u = User.get_by_key_name(user)
-    if u == None or not u.is_expert:
+    if u == None or not u.is_available_for_hangout():
         self.response.out.write("<html><body><p>No such user</p></body></html>")
-        logging.error('Connect request to invalid user/expert ' + user)
+        logging.error('Connect request to invalid and/or unavailable user/expert ' + user)
+        self.redirect('/')
+        return
     url = 'https://plus.google.com/hangouts/_/2e3e57ff748dd2c7c79e1c40c274cca933a8d984?authuser=0&hl=en-US'
     xmpp.send_message(u.email, chat.REQUEST_MSG % (url,))
     for email in ['karishmashah@google.com', 'charleschen@google.com', 'adrient@google.com']:
@@ -361,7 +333,6 @@ def main():
       ('/calendarCron', CalendarCronHandler),
       ('/connect', ConnectHandler),
       ('/manageAccount', AddExpertiseHandler),
-      # ('/manageAccount/addExpertise', AddExpertiseHandler),
       ('/sendInvite', SendInviteHandler),
       ('/signUp', SignUpHandler),
       (decorator.callback_path, decorator.callback_handler()),

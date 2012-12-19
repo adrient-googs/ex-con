@@ -1,56 +1,63 @@
 <div id="mini-navigation">
-  {% for category_pair in categories %}
-    <a href="#{{category_pair.0.name|slugify}}">
-      {{ category_pair.0.name|title }}
+  {% for category in categories %}
+    <a href="#{{category.name|slugify}}">
+      {{ category.name|title }}
     </a>
   {% endfor %}
 </div>
 
 <div id="main-contents" class="test-blue">
-{% for category_pair in categories %}
-  <!-- write out the category -->
-  <a id="{{category_pair.0.name|slugify}}" class="category">
-    {{ category_pair.0.name|title }}
-  </a>
+  <div id="expert-list">
+  {% for category in categories %}
+    <!-- write out the category -->
+    <a id="{{category.name|slugify}}" class="category">
+      {{ category.name|title }}
+    </a>
 
-  <!-- write out the experts with this category -->
-  {% for user_pair in category_pair.1 %}
-    <div class="expert">
-      {% if user_pair.1 %}
-        <a class="hangoutlink" href="/connect?user={{user.email}}">
-          <img src="static/hangout-button.png"
-            alt="Start a Hangout"
-            class="hangout"/>
-        </a>
-      {% else %}
-        <a class="hangoutlink">
-          <img src="static/hangout-button-faded.png"
-            alt="Start a Hangout"
-            class="hangout"/>
-        </a>
-      {% endif %}
+    <!-- write out the experts with this category -->
+    {% for area in category.areas %}
+      <div class="expert test-green">
+        <img class="profile" src="{{area.user_profile_pic}}"/>
+        <div class="description test-purple">{{ area.description }}</div>
+        <div class="user-name test-orange">with {{ area.user_name }}</div>
+    
+        {% if area.user_available %}
+          <a class="hangoutlink" href="/connect?user={{area.user_email}}">
+            <img src="static/hangout-button.png"
+              alt="Start a Hangout"
+              class="hangout"/>
+          </a>
+        {% else %}
+          <a class="hangoutlink">
+            <img src="static/hangout-button-faded.png"
+              alt="Start a Hangout"
+              class="hangout"/>
+          </a>
+        {% endif %}
+        <!-- 
                         
-      <div class="picturecolumn">
-        <img class="profile" src="{{user_pair.0.profile_pic}}"/>
-      </div>
-      <div class="detailcolumn">
-        <div class="username">
-          {% if user_pair.0.name %}
-            {{ user_pair.0.name }}
-          {% else %}
-            {{ user_pair.0.email }}
-          {% endif %}</div>
-        <div class="status">
-          {% if user_pair.1 %}
-            <img src="/static/cleardot.gif" class="avail">
-            available
-          {% else %}
-            <img src="/static/cleardot.gif" class="unavail">
-            unavailable
-          {% endif %}
+        <div class="picturecolumn">
+
         </div>
+        <div class="detailcolumn">
+          <div class="username">
+            {% if user_pair.0.name %}
+              {{ user_pair.0.name }}
+            {% else %}
+              {{ user_pair.0.email }}
+            {% endif %}</div>
+          <div class="status">
+            {% if user_pair.1 %}
+              <img src="/static/cleardot.gif" class="avail">
+              available
+            {% else %}
+              <img src="/static/cleardot.gif" class="unavail">
+              unavailable
+            {% endif %}
+          </div>
+        </div> -->
       </div>
-    </div>
+    {% endfor %}
   {% endfor %}
-{% endfor %}
+  </div> <!-- expert list -->
 </div>

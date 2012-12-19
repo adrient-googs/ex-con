@@ -8,6 +8,7 @@ import logging
 import os
 
 from google.appengine.ext import db
+from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
@@ -25,6 +26,7 @@ class AdminHandler(webapp.RequestHandler):
     template_values = {
       'contents': 'admin.html',
       'adminFuncs' : ADMIN_FUNCS,
+      'is_admin': users.is_current_user_admin(),
     }
     self.Render('main.html', template_values)
 
@@ -42,10 +44,17 @@ class AdminHandler(webapp.RequestHandler):
 def addDefaultCategories(out):
   """Adds default categories for the appengine datastore."""
   DEFAULT_CATEGORIES = [
-    'computer help', 'cooking', 'homework', 'romance', 'appliance repair',
-    'fitness', 'games', 'beauty and fashion', 'arts and crafts', 'handyman',
-    'employment', 'finance', 'translate', 'programming', 'pets', 'household',
-    'gardening', 'cars', 'religion', 'parenting', 'outdoors', 'legal', 'hardware']
+    'performing arts', 'arts & crafts', 'translation/localization', 'knowledge/news',
+    'childcare', 'handyman work', 'transportation', 'food/drinks', 'pet care',
+    'travel', 'health & wellness', 'writing', 'gaming', 'shopping', 'finance',
+    'business', 'photography', 'fashion/beauty/style', 'music/instruments',
+    'interior decorating', 'tech help', 'event planning', 'advising/counseling',
+    'communications', 'educational tutoring', 'fitness/sports', 'outdoors',
+    'career development']
+    # 'computer help', 'cooking', 'homework', 'romance', 'appliance repair',
+    # 'fitness', 'games', 'beauty and fashion', 'arts and crafts', 'handyman',
+    # 'employment', 'finance', 'translate', 'programming', 'pets', 'household',
+    # 'gardening', 'cars', 'religion', 'parenting', 'outdoors', 'legal', 'hardware']
 
   # existing_categories = {category.name for category in Category.all().fetch(limit=100)}
   for category_name in DEFAULT_CATEGORIES:
@@ -59,7 +68,7 @@ def addDefaultCategories(out):
 @handlers.text_handler     
 def tryAddingTwoOfTheSameCategory(out):
   """Test out adding two of the same category to make sure that it's unique."""
-  category_name = 'cooking'
+  category_name = 'arts & crafts'
 
   def printAllWithName():
     """Prints all categories with name category_name."""
@@ -104,7 +113,6 @@ def addDefaultUsers(out):
     new_user.profile_pic = profile_pic
     new_user.is_available = True
     new_user.is_expert = new_email != 'charleschen@google.com'
-    new_user.busy_time = '[]'
     new_user.put()
     # out.write('Got user "%s"\n' % new_user.email)
     # out.write('Added profile pic: "%s"\n' % new_user.profile_pic)
