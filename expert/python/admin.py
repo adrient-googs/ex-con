@@ -3,6 +3,8 @@ Contains all the request handlers for administrative control of the
 app.
 """
 
+import csv
+import logging
 import os
 
 from google.appengine.ext import db
@@ -100,6 +102,14 @@ def addDefaultUsers(out):
     #   out.write(' - %s\n' % category.name)
 
 @handlers.text_handler
+def addSourcedExperts(out):
+  """Adds a bunch of experts to the system."""
+  with open(os.path.join(os.path.dirname(__file__), 'sourced_experts.csv'), 'r') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        logging.error(row)
+
+@handlers.text_handler
 def quickDisplayCategories(out):
   """Displays all the categories."""
   for category in Category.all():
@@ -120,7 +130,8 @@ def removeAllAreasOfExpertise(out):
 ADMIN_FUNCS = (
   ('addDefaultCategories',          'Add some default categories'),
   ('tryAddingTwoOfTheSameCategory', 'Run a test to verify that catgories are unique'),
-  ('addDefaultUsers',               'Adds Karishma, Charles, and Adrien as users'),
+  ('addDefaultUsers',               'Add Karishma, Charles, and Adrien as users'),
+  ('addSourcedExperts',             'Add sourced experts as users'),
   ('quickDisplayCategories',        'Displays all categories'),
   ('removeAllAreasOfExpertise',     'Remove all areas of expertise (CAUTION)'),
 )
