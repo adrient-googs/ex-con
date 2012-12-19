@@ -62,10 +62,12 @@ class User(db.Model):
   def get_categories(self):
     """Returns a list of categories associated with this user."""
     return [area.category for area in get_areas_of_expertise()]
-    
+  
+  # Transactional query so get/put operations see most recently written data
+  @db.transactional(xg=True)
   def add_category(self, category_name, category_description):
     """Associates this user with a new category."""
-    category = Category.all().filter('name =', category_name).get()
+    category = Category.get_by_key_name(category_name)
     assert category
     key_name = AreaOfExpertise.get_key_name(self.email, category.name)
     if not AreaOfExpertise.get_by_key_name(key_name):

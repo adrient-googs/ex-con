@@ -113,7 +113,6 @@ def addDefaultUsers(out):
     out.write('adding new user: %s / %s\n' % (new_email, profile_pic))
     new_user.profile_pic = profile_pic
     new_user.is_available = True
-    new_user.is_expert = new_email != 'charleschen@google.com'
     new_user.put()
     # out.write('Got user "%s"\n' % new_user.email)
     # out.write('Added profile pic: "%s"\n' % new_user.profile_pic)
@@ -146,8 +145,8 @@ def quickDisplayCategories(out):
   """Displays all the categories."""
   for category in Category.all():
     out.write('- %s\n' % category.name)
-    for user in category.get_experts():
-      out.write('  - %s - available? %s\n' % (user.email, user.is_available_for_hangout()))
+    for area in category.get_areas_of_expertise():
+      out.write('  - %s - expert? - %s - available? %s - subcat - %s\n' % (area.user.email, area.user.is_expert, area.user.is_available_for_hangout(), area.description))
       
 @handlers.text_handler
 def removeAllAreasOfExpertise(out):
