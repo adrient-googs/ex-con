@@ -3,7 +3,7 @@
     {% if empty_list %}			
 			<a href="/manageAccount/addExpertise">Add</a> areas of expertise to begin connecting with users!<br><br>
     {% endif %}				
-		You are currently <a href="/">listed</a> as an expert in the following categories:<br>
+		You are currently <a href="/">listed</a> as an expert in the following categories:<br><br>
 		{% for category in user_listed_categories %}
 			<div class="category">{{category|title}}</div>
   	{% endfor %}

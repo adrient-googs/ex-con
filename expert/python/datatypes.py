@@ -40,6 +40,7 @@ class User(db.Model):
   is_subscribed = db.BooleanProperty()
   is_expert = db.BooleanProperty()
   busy_time = db.StringProperty()
+  expert_opt_out = db.BooleanProperty()
   
   def __init__(self, *args, **kwargs):
     """Constructor."""
