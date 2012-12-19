@@ -1,16 +1,13 @@
-<div id="main-contents">
-
-  <div style="border: 2px solid black">
-    {{display_this}}
-  </div>
-  
+<div id="main-contents">  
   <a class="category">Settings</a>
   <form id="manage-expertise" method="POST" action="/manageAccount" onsubmit="return validate_expertise_form()">
   <input class="checkbox" type="checkbox" name="expertoptout" value="true"
     {% if not user.expert_opt_out %}
 		  checked
 	  {% endif %}>Let others hang out with me<br>
-  <div class="information">(We will only show you as available when your calendar is free)</div>
+  <div class="information">
+    (We will only show you as available when your calendar is free.)
+  </div>
   <br>
 
   <a class="category">My Areas of Expertise</a>
@@ -26,7 +23,7 @@
     		{% if category.checked %}
     			checked
     		{% endif %}
-  		/> {{category.name|title}} ({{category.checked}})
+  		/> {{category.name|title}}
   	</div>
 		<div
 		  id="{{category.name|slugify}}-description"
