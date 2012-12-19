@@ -1,7 +1,11 @@
 <div id="main-contents">
 
+  <div style="border: 2px solid black">
+    {{display_this}}
+  </div>
+  
   <a class="category">Settings</a>
-  <form id="manage-expertise" method="POST" action="/manageAccount">
+  <form id="manage-expertise" method="POST" action="/manageAccount" onsubmit="return validate_expertise_form()">
   <input class="checkbox" type="checkbox" name="expertoptout" value="true"
     {% if not user.expert_opt_out %}
 		  checked
@@ -11,24 +15,34 @@
 
   <a class="category">My Areas of Expertise</a>
   {% for category in all_categories %}
-    <input
-      id="{{category.name|slugify}}-input"
-      class="checkbox"
-      type="checkbox"
-      name="{{category.name}}"
-      value="true"
-      onclick="category_checked('category_id')"
+    <div>
+      <input
+        id="{{category.name|slugify}}-checkbox"
+        class="checkbox"
+        type="checkbox"
+        name="{{category.name}}"
+        value="true"
+        onclick="category_checked('{{category.name|slugify}}')"
+    		{% if category.checked %}
+    			checked
+    		{% endif %}
+  		/> {{category.name|title}} ({{category.checked}})
+  	</div>
+		<div
+		  id="{{category.name|slugify}}-description"
+		  class="sub-category"
   		{% if category.checked %}
-  			checked
+  			style="display:block"
+  		{% else %}
+  		  style="display:none"
   		{% endif %}
-		/> {{category.name|title}}
-		<div class="sub-category">
+		>
 		  Subcategory:
 		  <input
-		    id="{{category.name|slugify}}-description"
 		    type="text"
 		    name="{{category.name}} description"
-		/>
+		    value="{{category.description}}"
+		  />
 	  </div>
   {% endfor %}
 	Other: <input type="text" name="other"><br><br>

@@ -38,7 +38,7 @@ import client
 import httplib2
 from apiclient.discovery import build
 from apiclient.discovery import build_from_document
-from datatypes import Category, Client, User, UserToCategory
+from datatypes import Category, Client, User, AreaOfExpertise
 from oauth2client.appengine import oauth2decorator_from_clientsecrets, CredentialsModel, StorageByKeyName
 from oauth2client.client import AccessTokenRefreshError
 
@@ -231,9 +231,19 @@ class AddExpertiseHandler(webapp.RequestHandler):
       except AccessTokenRefreshError:
         self.redirect('/manageAccount')
         return
-    user_listed_categories = [category.key().name() for category in u.get_categories()]
-    all_categories = [{'checked': category.key().name() in user_listed_categories, 'name': category.name} for category in Category.all().fetch(100)]
+        
+    # figure out which areas of expertise were set
+    logging.warning('this is a WARNING')
+    user_areas = u.get_areas_of_expertise() # TODO: CHANGE THIS TO A DICT
+    all_categories = []
+    for category in Category.all():
+      all_categories.append({
+          'checked': False,
+          'name': category.name,
+          'description': 'blah', # category.name,
+      })
     template_values = {
+      'display_this': (str(map(id, user_areas)) + "blah"),
       'all_categories': all_categories,
       'user': u,
       'logout': users.create_logout_url("/"),
@@ -244,6 +254,7 @@ class AddExpertiseHandler(webapp.RequestHandler):
     self.Render('main.html', template_values)
     
   def post(self):
+    # figure out the current user
     user = users.get_current_user()
     if user == None:
       self.redirect(users.create_login_url("/manageAccount"))
@@ -252,20 +263,27 @@ class AddExpertiseHandler(webapp.RequestHandler):
     if u == None:
       self.redirect(users.create_login_url("/manageAccount"))
       return
-    utoc = UserToCategory.all()
-    utoc.filter("user =", u)
-    for existing_utoc in utoc.fetch(100):
-      existing_utoc.delete()
+      
+    # add all the existing categories
+    area = AreaOfExpertise.all()
+    area.filter("user =", u)
+    for existing_area in area.fetch(100):
+      existing_area.delete()
     for category in Category.all().fetch(100):
       if self.request.get(category.name) == 'true':
-        u.add_category(category.name)
-    other_category = self.request.get("other").lower()
-    # Disallow empty category names and the "other" category name
-    if other_category and other_category != "" and other_category != "other":
-      if not Category.get_by_key_name(other_category):
-        category = Category(name=other_category)
-        category.put()
-        u.add_category(other_category)
+        description = self.request.get('%s description' % category.name)
+        u.add_category(category.name, description)
+        
+    # # add the other category
+    # other_category = self.request.get("other").lower()
+    # if other_category and other_category != "" and other_category != "other":
+    #   # Disallow empty category names and the "other" category name
+    #   if not Category.get_by_key_name(other_category):
+    #     category = Category(name=other_category)
+    #     category.put()
+    #     u.add_category(other_category, other_category)
+    
+    # do the opt out stuff
     if self.request.get("expertoptout") != 'true':
       u.expert_opt_out = True
       u.put()

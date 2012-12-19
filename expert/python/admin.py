@@ -10,7 +10,7 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
 import handlers
-from datatypes import Category, User, UserToCategory
+from datatypes import Category, User, AreaOfExpertise
 
 class AdminHandler(webapp.RequestHandler):
   """Show the user a bunch of admin options."""
@@ -94,23 +94,34 @@ def addDefaultUsers(out):
     new_user.put()
     # out.write('Got user "%s"\n' % new_user.email)
     # out.write('Added profile pic: "%s"\n' % new_user.profile_pic)
-    new_user.add_category('cooking')
+    new_user.add_category('cooking', 'fake cooking description')
     # for category in new_user.get_categories():
     #   out.write(' - %s\n' % category.name)
 
 @handlers.text_handler
 def quickDisplayCategories(out):
+  """Displays all the categories."""
   for category in Category.all():
     out.write('- %s\n' % category.name)
     for user in category.get_experts():
       out.write('  - %s\n' % user.email)
+      
+@handlers.text_handler
+def removeAllAreasOfExpertise(out):
+  """Removes all the areas of expertise."""
+  for area in AreaOfExpertise.all():
+    out.write('deleting:\n')
+    out.write('  key : %s' % area.key)
+    # out.write('  user: %s')
+     
 
 # This is is a list of functions which the administrator can call.
 ADMIN_FUNCS = (
   ('addDefaultCategories',          'Add some default categories'),
   ('tryAddingTwoOfTheSameCategory', 'Run a test to verify that catgories are unique'),
   ('addDefaultUsers',               'Adds Karishma, Charles, and Adrien as users'),
-  ('quickDisplayCategories',        'Displays all categories.'),
+  ('quickDisplayCategories',        'Displays all categories'),
+  ('removeAllAreasOfExpertise',     'Remove all areas of expertise (CAUTION)'),
 )
         
 def getHandlers():

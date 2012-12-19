@@ -1,42 +1,46 @@
-# ###
-# Useful Utilities
-# ###
-# 
-# # create a "module" called util
-# util = util ? {}
-# 
-# util.assertion = (condition, err_msg) ->
-#   unless condition
-#     alert err_msg
-#     throw new Error err_msg
-# 
-# # Flips the arguments to a function
-# util.flip = (func) ->
-#   (args...) ->
-#     func args[...].reverse()...
-# 
-# # perform an action later, but not in the current thread
-# # util.later 1000, func - peform the action in 1 second
-# # util.later func       - peform the action in 1 millisecond
-# util.later = (args...) ->
-#   if args.length == 1
-#     [func, ms] = [args[0], 1]
-#   else if args.length == 2
-#     [func, ms] = [args[1], args[0]]
-#   else
-#     throw new Error 'util.later takes 1 or 2 arguments only.'
-#   setTimeout func, ms
-#   
-# # converts a string To Title Case
-# util.titleCase = (str) ->
-#   str.replace /\w\S*/g, (txt) ->
-#     txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-# 
-# # adrient@google.com -> adrient
-# util.prettyUsername = (name) ->
-#   at_index = name.indexOf('@')
-#   if at_index > 0 then name[0...at_index] else name
-#   
+###
+Useful Utilities
+###
+
+# create a "module" called util
+util = util ? {}
+
+util.assertion = (condition, err_msg) ->
+  unless condition
+    alert err_msg
+    throw new Error err_msg
+
+# Flips the arguments to a function
+util.flip = (func) ->
+  (args...) ->
+    func args[...].reverse()...
+
+# perform an action later, but not in the current thread
+# util.later 1000, func - peform the action in 1 second
+# util.later func       - peform the action in 1 millisecond
+util.later = (args...) ->
+  if args.length == 1
+    [func, ms] = [args[0], 1]
+  else if args.length == 2
+    [func, ms] = [args[1], args[0]]
+  else
+    throw new Error 'util.later takes 1 or 2 arguments only.'
+  setTimeout func, ms
+  
+# strips whitespace from a string
+util.trim = (str) ->
+  str.replace /^\s+|\s+$/g, ''
+  
+# converts a string To Title Case
+util.titleCase = (str) ->
+  str.replace /\w\S*/g, (txt) ->
+    txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+
+# adrient@google.com -> adrient
+util.prettyUsername = (name) ->
+  at_index = name.indexOf('@')
+  if at_index > 0 then name[0...at_index] else name
+  
 # ###########
 # # OBJECTS #
 # ###########

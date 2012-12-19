@@ -25,7 +25,7 @@ class Category(db.Model):
   def get_experts(self):
     """Returns all users associated with this Category."""
     return [pair.user
-      for pair in UserToCategory.all().filter('category =', self)]
+      for pair in AreaOfExpertise.all().filter('category =', self)]
     
 class User(db.Model):
   email = db.StringProperty(required=True)
@@ -51,17 +51,21 @@ class User(db.Model):
     else:
       db.Model.__init__(self, key_name=key_name, **kwargs)
     
+  def get_areas_of_expertise(self):
+    """Returns a list of this users areas of expertise."""
+    return [area for area in AreaOfExpertise.all().filter('user =', self).fetch(100)]
+  
   def get_categories(self):
     """Returns a list of categories associated with this user."""
-    return [pair.category
-      for pair in UserToCategory.all().filter('user =', self)]
+    return [area.category for area in get_areas_of_expertise()]
     
-  def add_category(self, category_name):
+  def add_category(self, category_name, category_description):
     """Associates this user with a new category."""
     category = Category.all().filter('name =', category_name).get()
     assert category
-    key_name = UserToCategory.get_key_name(self.email, category.name)
-    pair = UserToCategory.get_or_insert(key_name, user=self, category=category)
+    key_name = AreaOfExpertise.get_key_name(self.email, category.name)
+    pair = AreaOfExpertise.get_or_insert(key_name, user=self,
+      category=category, description=category_description)
   
   def is_available_for_hangout(self):
     """Returns if the user is available for hangout. Checks if the user is available in chat and is not busy (schedule-wise)."""
@@ -73,10 +77,10 @@ class User(db.Model):
         return False
     return True
 
-class UserToCategory(db.Model):
+class AreaOfExpertise(db.Model):
   user = db.ReferenceProperty(User, required=True)
   category = db.ReferenceProperty(Category, required=True)
-  detail = db.StringProperty()
+  description = db.StringProperty(required=True)
   
   def __init__(self, *args, **kwargs):
     """Constructor."""
