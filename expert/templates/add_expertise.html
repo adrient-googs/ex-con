@@ -11,15 +11,7 @@
   <br>
 
   <a class="category">My Areas of Expertise</a>
-  {% for category_description_pair in user_categories %}
-    <div id="{{ category_description_pair.0|slugify }}">
-      {{ category_description_pair.1 }}
-      <a href="javascript:void(0)" onclick="category_removed('{{ category_description_pair.0|slugify }}')">remove</a>
-    </div>
-  {% endfor %}
-  
   <!-- this is the search bar -->
-  <br>
   <div id="search-bar" class="ui-widget">
     Add a category <input id="search" name="addcategory" type="text" value="" style="width:75%"/>
   </div>
@@ -34,14 +26,86 @@
       $( "input#search" ).autocomplete({
           source: availableTags
       }).focus();
-      // $(".input1").keyup(function (e) {
-      //     if (e.keyCode == 13) {
-      //         // Do something
-      //     }
-      // });
-  });
+    });
+    // var handler = function (e) {
+    //       if (e.keyCode == 13) {
+    //         validate_expertise_form();
+    //         e.stopPropagation();
+    //         e.preventDefault();
+    //         return false;
+    //       }
+    //  };
+    // keydown() is doing something weird here where enter key triggers twice
+    // I don't have time to debug this but this is a stopgap solution until we
+    // figure it out.
+    $("input#search").keydown(function(e) {
+      if (e.keyCode == 13) {
+        var data = $(this).data();
+
+        if(!data['pressed']) {
+            data['pressed'] = true;
+            if (validate_expertise_form()) {
+              // Add a checkbox and description field to the hidden form
+              value = this.value
+              if (!data['count']) {
+                data['count'] = 0;
+                // data['addedcategories'] = []
+              }
+              // user_expertise_list = $("div#userexpertiselist > input")
+              // for (var i = 0; i < user_expertise_list; ++i) {
+              //   if (user_expertise_list.value) {
+              //     
+              //   }
+              // }
+              // for elem in $("div#userexpertiselist > div")
+              var index = value.search(/\s::\s/)
+              var category_name = value.substr(0, index).toLowerCase()
+              var subcategory = value.substr(index + 4).toLowerCase()
+              // var input_checkbox = $("<input>").attr("type", "checkbox").attr("name", category_name).attr("value", "true").attr("id", "addcategory" + data['count'] + "-checkbox")
+              //  input_checkbox[0].setAttribute("checked", "")
+ 
+
+              var input_description = $("<input>").attr("type", "text").attr("name", category_name + " description").attr("value", subcategory).attr("id", "addcategory" + data['count'] + "-description")
+              var display_category = $("<div>").attr("id", "addcategory" + data['count'])
+              var remove_link = $("<a>").attr("href", "javascript:void(0)").attr("onclick", "category_removed('addcategory" + data['count']+ "')")
+              remove_link.append("remove")
+              var hidden_input = $("<input>").attr("type", "hidden").attr("name", "usercategory").attr("value", value)
+              display_category.append(value)
+              display_category.append("&nbsp;")
+              display_category.append(remove_link)
+              display_category.append(hidden_input)
+              // $("div#hiddenfields").append(input_checkbox)
+              // $("div#hiddenfields").append(input_description)
+              $("div#userexpertiselist").append(display_category)
+              data['count']++;
+              // $("form#manage-expertise").
+            }
+            e.stopPropagation();
+            e.preventDefault();
+            return false;
+        }
+      } else {
+        window.console.log('pressed already')
+      }
+    }).keyup(function(e) {
+      if (e.keyCode == 13) {
+        $(this).data('pressed', false);
+      }
+    });
   </script>
-  <div id="hiddenfields">
+
+  <br>
+  <div id="userexpertiselist">
+  {% for category_description_pair in user_categories %}
+    <div id="{{ category_description_pair.0|slugify }}">
+      {{ category_description_pair.1 }}
+      <a href="javascript:void(0)" onclick="category_removed('{{ category_description_pair.0|slugify }}')">remove</a>
+      <input type="hidden" name="usercategory" value="{{category_description_pair.1}}"/>
+    </div>
+  {% endfor %}
+  </div>
+  
+  <!-- <div id="hiddenfields">
     {% for category in all_categories %}
       <div>
         <input
@@ -51,31 +115,32 @@
           name="{{category.name}}"
           value="true"
           onclick="category_checked('{{category.name|slugify}}')"
-      		{% if category.checked %}
-      			checked
-      		{% endif %}
-    		/> {{category.name|title}}
-    	</div>
-  		<div
-  		  id="{{category.name|slugify}}-description"
-  		  class="sub-category"
-    		{% if category.checked %}
-    			style="display:block"
-    		{% else %}
-    		  style="display:none"
-    		{% endif %}
-  		>
-  		  Subcategory:
-  		  <input
-  		    type="text"
-  		    name="{{category.name}} description"
-  		    value="{{category.description}}"
-  		  />
-  	  </div>
+          {% if category.checked %}
+            checked
+          {% endif %}
+        /> {{category.name|title}}
+      </div>
+      <div
+        id="{{category.name|slugify}}-description"
+        class="sub-category"
+        {% if category.checked %}
+          style="display:block"
+        {% else %}
+          style="display:none"
+        {% endif %}
+      >
+        Subcategory:
+        <input
+          type="text"
+          name="{{category.name}} description"
+          value="{{category.description}}"
+        />
+      </div>
     {% endfor %}
-  	Other: <input type="text" name="other"/><br><br>
-  </div>
-	<input class="submitbutton" type="submit"/>
+    Other: <input type="text" name="other"/><br><br>
+  </div> -->
+  <br>
+	<input class="submitbutton" type="submit" value="Save Changes"/>
   </form>
 
 </div>

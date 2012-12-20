@@ -99,9 +99,7 @@ Useful Utilities
   };
 
   this.category_removed = function(category_id) {
-    var category, checkbox;
-    checkbox = $("input#" + category_id + "-checkbox");
-    checkbox.get(0).removeAttribute('checked');
+    var category;
     category = $("div#" + category_id)[0];
     category.parentNode.removeChild(category);
     return true;

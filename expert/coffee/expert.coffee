@@ -37,9 +37,9 @@ show_debug_colors = ->
   
 # this function is called when a category is removed
 @category_removed = (category_id) ->
-  checkbox = $("input##{category_id}-checkbox")
-  checkbox.get(0).removeAttribute 'checked'
-
+  # checkbox = $("input##{category_id}-checkbox")
+  # checkbox.get(0).removeAttribute 'checked'
+  # 
   category = $("div##{category_id}")[0]
   category.parentNode.removeChild(category);
   return true

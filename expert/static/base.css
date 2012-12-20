@@ -213,6 +213,7 @@ div.information {
 }
 
 div#search-bar {
+  font-family: Helvetica, sans-serif;
   font-size: 1em;
 }
 
@@ -240,8 +241,11 @@ input.submitbutton {
   background: #4D90FE;
   color: white;
   cursor: pointer;
+  display: block;
   font: 1.2em;
   height: 30px;
+  margin-left:auto;
+  margin-right:auto;
   padding: 4px;
   width: 100px;
   -moz-border-radius: 4px;

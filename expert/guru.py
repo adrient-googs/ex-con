@@ -38,7 +38,7 @@ import client
 import httplib2
 from apiclient.discovery import build
 from apiclient.discovery import build_from_document
-from datatypes import Category, Client, User, AreaOfExpertise
+from datatypes import Category, Client, HangoutStats, User, AreaOfExpertise
 from oauth2client.appengine import oauth2decorator_from_clientsecrets, CredentialsModel, StorageByKeyName
 from oauth2client.client import AccessTokenRefreshError
 
@@ -135,7 +135,10 @@ class CalendarCronHandler(webapp.RequestHandler):
       if u.user_id and u.is_expert:
         credentials = StorageByKeyName(
           CredentialsModel, u.user_id, 'credentials').get()
-        if credentials is not None and not credentials.invalid:
+        if credentials is not None:
+          if credentials.invalid:
+            logging.error("Credentials invalid for %s" % u.email)
+            continue
           try:
             email = u.email
             # Authorize takes care of refreshing an expired token
@@ -262,33 +265,58 @@ class AddExpertiseHandler(webapp.RequestHandler):
     area.filter("user =", u)
     for existing_area in area.fetch(100):
       existing_area.delete()
-    for category in Category.all().fetch(100):
-      if self.request.get(category.name) == 'true':
-        description = self.request.get('%s description' % category.name)
-        u.add_category(category.name, description)
-        
-    # add the other category
-    other_category = self.request.get("other").lower()
-    if other_category and other_category != "" and other_category != "other":
-      # Disallow empty category names and the "other" category name
-      if not Category.get_by_key_name(other_category):
-        category = Category(name=other_category)
-        category.put()
-      u.add_category(other_category, other_category)
+
+    u.expert_opt_out = self.request.get("expertoptout") != "true"
+    u.put()
+    # for param in self.request.arguments():
+    #   value = self.request.get(param)
+    #   if param == "expertoptout":
+    #     u.expert_opt_out = self.request.get("expertoptout") != "true"
+    #     u.put()
+    #   elif not re.search(" description$", param) and value == "true":
+    #     if not Category.get_by_key_name(param):
+    #       c = Category(name=param)
+    #       c.put()
+    #     description = self.request.get('%s description' % param)
+    #     logging.error(param + " :: " + description)
+    #     u.add_category(param, description)
     
-    add_category = self.request.get("addcategory").lower()
-    if add_category and add_category != "" and re.search("\s::\s", add_category):
-      match = re.search("\s::\s", add_category)
-      category_name = add_category[0:match.start(0)]
-      subcategory = add_category[match.end(0):]
-      if not Category.get_by_key_name(category_name):
-        category = Category(name=category_name)
-        category.put()
-      u.add_category(category_name, subcategory)
+    for category_subcategory in self.request.get_all("usercategory"):
+      if category_subcategory and category_subcategory != "" and re.search("\s::\s", category_subcategory):
+        match = re.search("\s::\s", category_subcategory)
+        category_name = category_subcategory[0:match.start(0)].lower()
+        subcategory = category_subcategory[match.end(0):].lower()
+        if not Category.get_by_key_name(category_name):
+          category = Category(name=category_name)
+          category.put()
+        u.add_category(category_name, subcategory)
+      
+        
+    # for category in Category.all().fetch(100):
+    #    if self.request.get(category.name) == 'true':
+    #      description = self.request.get('%s description' % category.name)
+    #      u.add_category(category.name, description)
+         
+    # # add the other category
+    # other_category = self.request.get("other").lower()
+    # if other_category and other_category != "" and other_category != "other":
+    #   # Disallow empty category names and the "other" category name
+    #   if not Category.get_by_key_name(other_category):
+    #     category = Category(name=other_category)
+    #     category.put()
+    #   u.add_category(other_category, other_category)
+    
+    # add_category = self.request.get("addcategory").lower()
+    # if add_category and add_category != "" and re.search("\s::\s", add_category):
+    #   match = re.search("\s::\s", add_category)
+    #   category_name = add_category[0:match.start(0)]
+    #   subcategory = add_category[match.end(0):]
+    #   if not Category.get_by_key_name(category_name):
+    #     category = Category(name=category_name)
+    #     category.put()
+    #   u.add_category(category_name, subcategory)
     
     # do the opt out stuff
-    u.expert_opt_out = self.request.get("expertoptout") != 'true'
-    u.put()
     self.redirect("/manageAccount")
 
 class ConnectHandler(webapp.RequestHandler):
@@ -302,7 +330,8 @@ class ConnectHandler(webapp.RequestHandler):
         logging.error('Connect request to invalid and/or unavailable user/expert ' + user)
         self.redirect('/')
         return
-    url = 'https://plus.google.com/hangouts/_/2e3e57ff748dd2c7c79e1c40c274cca933a8d984?authuser=0&hl=en-US'
+    url = HangoutStats.get_hangout_url()
+    logging.info('Hangout url: %s' % url)
     xmpp.send_message(u.email, chat.REQUEST_MSG % (url,))
     for email in ['karishmashah@google.com', 'charleschen@google.com', 'adrient@google.com']:
       u = User.get_by_key_name(email)

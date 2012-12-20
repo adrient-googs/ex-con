@@ -1,3 +1,5 @@
+import logging
+
 from datetime import datetime
 from django.utils import simplejson as json
 from google.appengine.api import channel
@@ -5,6 +7,20 @@ from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
+class HangoutStats(db.Model):
+  """Keeps a summary of the hangout stats"""
+  counter = db.IntegerProperty(default=0)
+  
+  @staticmethod
+  @db.transactional
+  def get_hangout_url():
+      hangout_stats = HangoutStats.get_by_key_name("singleton")
+      if not hangout_stats:
+        hangout_stats = HangoutStats(key_name="singleton")
+      hangout_stats.counter += 1
+      hangout_stats.put()
+      return "http://plus.google.com/hangouts/_/event/xoncall" + str(hangout_stats.counter)
+  
 class Client(db.Model):
   """Client ids that are connected via Channel."""
   id = db.StringProperty(required=True)
@@ -80,10 +96,14 @@ class User(db.Model):
   def is_available_for_hangout(self):
     """Returns if the user is available for hangout. Checks if the user is available in chat and is not busy (schedule-wise)."""
     if not self.is_expert or not self.is_subscribed or not self.is_available or not self.busy_time or self.expert_opt_out:
+      logging.info("Is not available because not expert, subscribed, available, has busy schedule, or opted out")
       return False
     now = datetime.utcnow().replace(microsecond=0)
+    logging.info(now)
     for event in json.loads(self.busy_time):
+      logging.info(event)
       if datetime.strptime(event['start'], "%Y-%m-%dT%H:%M:%SZ") < now and datetime.strptime(event['end'], "%Y-%m-%dT%H:%M:%SZ") > now:
+        logging.info("Not showing because of conflicting event")
         return False
     return True
     
