@@ -223,6 +223,10 @@ div#userfeedback {
   margin-top: 20px;
 }
 
+span.complete {
+  color: #33CC33;
+}
+
 input.submitbutton {
   border: 1px solid #777777;
   background: #4D90FE;

@@ -310,6 +310,7 @@ class SignUpHandler(webapp.RequestHandler):
       u.user_id = user.user_id()
       u.put()
     template_values = {
+      'user': u,
       'url': decorator.authorize_url(),
       'has_credentials': decorator.has_credentials(),
       'contents': 'sign_up.html',
