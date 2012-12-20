@@ -23,7 +23,7 @@ show_debug_colors = ->
       
 # this function is called when a category is checked
 @category_checked = (category_id) ->
-  # figure out if the chekcbox is checked
+  # figure out if the checkbox is checked
   checkbox = $("input##{category_id}-checkbox")
   checked = checkbox.attr 'checked'
 
@@ -35,16 +35,30 @@ show_debug_colors = ->
   # move the focus to the description input
   description.children('input').focus() if checked
   
+# this function is called when a category is removed
+@category_removed = (category_id) ->
+  checkbox = $("input##{category_id}-checkbox")
+  checkbox.get(0).removeAttribute 'checked'
+
+  category = $("div##{category_id}")[0]
+  category.parentNode.removeChild(category);
+  return true
+  
 # this function is called when the submit expertise form is called
 @validate_expertise_form = ->
-  # check to make sure that all the expertise works
-  for div in $('form#manage-expertise').children('div.sub-category')
-    if $(div).css('display') is 'none'
-      continue 
-    input = $(div).children('input')
-    input_name = (input.attr 'name').replace(' description', '')
-    input_value = util.trim input.attr 'value'
-    if input_value is ''
-      alert "Please provde a subcategory for '#{input_name}.'"
-      return false
+  box_value = $("input#search}")[0].value
+  if box_value != "" && box_value.match(/\s::\s/) == null
+    alert "Please provide your expertise in the following \"<category> :: <subcategory>\" format"
+    return false
   return true
+  # check to make sure that all the expertise works
+  # for div in $('form#manage-expertise').children('div.sub-category')
+  #   if $(div).css('display') is 'none'
+  #     continue 
+  #   input = $(div).children('input')
+  #   input_name = (input.attr 'name').replace(' description', '')
+  #   input_value = util.trim input.attr 'value'
+  #   if input_value is ''
+  #     alert "Please provide a subcategory for '#{input_name}.'"
+  #     return false
+  # return false

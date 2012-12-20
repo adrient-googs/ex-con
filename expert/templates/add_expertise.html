@@ -11,38 +11,70 @@
   <br>
 
   <a class="category">My Areas of Expertise</a>
-  {% for category in all_categories %}
-    <div>
-      <input
-        id="{{category.name|slugify}}-checkbox"
-        class="checkbox"
-        type="checkbox"
-        name="{{category.name}}"
-        value="true"
-        onclick="category_checked('{{category.name|slugify}}')"
-    		{% if category.checked %}
-    			checked
-    		{% endif %}
-  		/> {{category.name|title}}
-  	</div>
-		<div
-		  id="{{category.name|slugify}}-description"
-		  class="sub-category"
-  		{% if category.checked %}
-  			style="display:block"
-  		{% else %}
-  		  style="display:none"
-  		{% endif %}
-		>
-		  Subcategory:
-		  <input
-		    type="text"
-		    name="{{category.name}} description"
-		    value="{{category.description}}"
-		  />
-	  </div>
+  {% for category_description_pair in user_categories %}
+    <div id="{{ category_description_pair.0|slugify }}">
+      {{ category_description_pair.1 }}
+      <a href="javascript:void(0)" onclick="category_removed('{{ category_description_pair.0|slugify }}')">remove</a>
+    </div>
   {% endfor %}
-	Other: <input type="text" name="other"/><br><br>
+  
+  <!-- this is the search bar -->
+  <br>
+  <div id="search-bar" class="ui-widget">
+    Add a category <input id="search" name="addcategory" type="text" value="" style="width:75%"/>
+  </div>
+  <script>
+  $(function() {
+      var availableTags = [
+        <!-- TODO: make this dynamic -->
+        {% for suggestion in suggestions %}
+        "{{suggestion}}",
+        {% endfor %}
+      ];
+      $( "input#search" ).autocomplete({
+          source: availableTags
+      }).focus();
+      // $(".input1").keyup(function (e) {
+      //     if (e.keyCode == 13) {
+      //         // Do something
+      //     }
+      // });
+  });
+  </script>
+  <div id="hiddenfields">
+    {% for category in all_categories %}
+      <div>
+        <input
+          id="{{category.name|slugify}}-checkbox"
+          class="checkbox"
+          type="checkbox"
+          name="{{category.name}}"
+          value="true"
+          onclick="category_checked('{{category.name|slugify}}')"
+      		{% if category.checked %}
+      			checked
+      		{% endif %}
+    		/> {{category.name|title}}
+    	</div>
+  		<div
+  		  id="{{category.name|slugify}}-description"
+  		  class="sub-category"
+    		{% if category.checked %}
+    			style="display:block"
+    		{% else %}
+    		  style="display:none"
+    		{% endif %}
+  		>
+  		  Subcategory:
+  		  <input
+  		    type="text"
+  		    name="{{category.name}} description"
+  		    value="{{category.description}}"
+  		  />
+  	  </div>
+    {% endfor %}
+  	Other: <input type="text" name="other"/><br><br>
+  </div>
 	<input class="submitbutton" type="submit"/>
   </form>
 

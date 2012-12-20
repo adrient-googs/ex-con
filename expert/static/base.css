@@ -212,6 +212,10 @@ div.information {
   margin-left: 20px;
 }
 
+div#search-bar {
+  font-size: 1em;
+}
+
 form#manage-expertise div.sub-category { 
   color: rgb(50, 50, 51);
   font-size: 13px;
@@ -221,6 +225,10 @@ form#manage-expertise div.sub-category {
 
 div#userfeedback {
   margin-top: 20px;
+}
+
+div#hiddenfields {
+  display: none;
 }
 
 span.complete {

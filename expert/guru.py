@@ -99,6 +99,7 @@ class MainHandler(webapp.RequestHandler):
     if u:
       is_expert = u.is_expert
     categories = []
+    suggestions = set()
     for category in Category.all():
       areas = category.get_areas_of_expertise()
       if areas:
@@ -109,6 +110,8 @@ class MainHandler(webapp.RequestHandler):
           'user_available' : area.user.is_available_for_hangout(),
           'description' : area.description.title(),
         } for area in areas if area.user.is_expert]
+        for area in areas:
+          suggestions.add(category.name.title() + ' :: ' + area.description.title())
         if area_data:
           categories.append({'name':category.name, 'areas':area_data})
     self.Render("main.html", {
@@ -117,6 +120,7 @@ class MainHandler(webapp.RequestHandler):
       'token': token,
       'is_expert': is_expert,
       'categories': categories,
+      'suggestions': [suggestion for suggestion in suggestions],
       'login': users.create_login_url("/"),
       'logout': users.create_logout_url("/"),
       'is_admin': users.is_current_user_admin(),
@@ -210,7 +214,7 @@ class AddExpertiseHandler(webapp.RequestHandler):
     user_areas = u.get_areas_of_expertise()
     user_areas_dict = dict((area.category.name, area) for area in user_areas)
 
-    # construct a data structure of all categorie
+    # construct a data structure of all categories
     all_categories = []
     for category in Category.all():
       category_data = {
@@ -224,9 +228,16 @@ class AddExpertiseHandler(webapp.RequestHandler):
           user_areas_dict[category.name].description
       all_categories.append(category_data)
       
+    suggestions = set()
+    for category in Category.all():
+      for area in category.get_areas_of_expertise():
+        suggestions.add(category.name.title() + ' :: ' + area.description.title())
+
     # this is what we pass to the templating engine
     template_values = {
       'all_categories': all_categories,
+      'suggestions': [suggestion for suggestion in suggestions],
+      'user_categories': [(area.category.name.title(), area.category.name.title() + ' :: ' + area.description.title()) for area in user_areas],
       'user': u,
       'logout': users.create_logout_url("/"),
       'contents': 'add_expertise.html',
@@ -264,6 +275,16 @@ class AddExpertiseHandler(webapp.RequestHandler):
         category = Category(name=other_category)
         category.put()
       u.add_category(other_category, other_category)
+    
+    add_category = self.request.get("addcategory").lower()
+    if add_category and add_category != "" and re.search("\s::\s", add_category):
+      match = re.search("\s::\s", add_category)
+      category_name = add_category[0:match.start(0)]
+      subcategory = add_category[match.end(0):]
+      if not Category.get_by_key_name(category_name):
+        category = Category(name=category_name)
+        category.put()
+      u.add_category(category_name, subcategory)
     
     # do the opt out stuff
     u.expert_opt_out = self.request.get("expertoptout") != 'true'

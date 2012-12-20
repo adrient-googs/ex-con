@@ -98,21 +98,21 @@ Useful Utilities
     }
   };
 
+  this.category_removed = function(category_id) {
+    var category, checkbox;
+    checkbox = $("input#" + category_id + "-checkbox");
+    checkbox.get(0).removeAttribute('checked');
+    category = $("div#" + category_id)[0];
+    category.parentNode.removeChild(category);
+    return true;
+  };
+
   this.validate_expertise_form = function() {
-    var div, input, input_name, input_value, _i, _len, _ref;
-    _ref = $('form#manage-expertise').children('div.sub-category');
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      div = _ref[_i];
-      if ($(div).css('display') === 'none') {
-        continue;
-      }
-      input = $(div).children('input');
-      input_name = (input.attr('name')).replace(' description', '');
-      input_value = util.trim(input.attr('value'));
-      if (input_value === '') {
-        alert("Please provde a subcategory for '" + input_name + ".'");
-        return false;
-      }
+    var box_value;
+    box_value = $("input#search}")[0].value;
+    if (box_value !== "" && box_value.match(/\s::\s/) === null) {
+      alert("Please provide your expertise in the following \"<category> :: <subcategory>\" format");
+      return false;
     }
     return true;
   };

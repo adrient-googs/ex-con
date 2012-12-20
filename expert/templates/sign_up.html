@@ -1,14 +1,14 @@
 <div id="main-contents">
-  <p>Step 1: <a href="{{ url }}">Click here</a> to grant Expert Connect permission to read your
+  <p>Step 1: <a href="{{ url }}">Click here</a> to grant x-on-call permission to read your
   Google+ profile and calendar information.
   {% if has_credentials %}
     <span class="complete">Completed!</span>
   {% endif %}
   </p>
   {% if has_credentials %}
-    <!-- <p>Step 2: Invite <b>xpertconnect@appspot.com</b> as a contact in Gchat.</p>
+    <!-- <p>Step 2: Invite <b>x-on-call@appspot.com</b> as a contact in Gchat.</p>
     <img id="invitetochat" src="/static/invitetochat.png"> -->
-    <p>Step 2: <a href="/sendInvite">Click here</a> to invite Expert Connect to be able to chat with you. (This will allow Expert Connect to send you a message through Gchat when a user requests your expertise)
+    <p>Step 2: <a href="/sendInvite">Click here</a> to invite x-on-call to be able to chat with you. (This will allow x-on-call to send you a message through Gchat when a user requests your expertise)
     {% if user.is_subscribed %}
       <span class="complete">Completed!</span>
     {% endif %}
@@ -16,7 +16,7 @@
     <p>Step 3: Approve the request.  (Go to your gmail account, and in your list of chat contacts, you should find the request; click there to accept it.)     {% if user.is_subscribed %}
       <span class="complete">Completed!</span>
     {% else %}
-      <a href="/sendInvite">Resend Invitation</a>
+      <a href="/sendInvite">Resend request</a>
     {% endif %}
     </p>
     <img id="invitetochat" src="/static/inviteexperttochat.png">
