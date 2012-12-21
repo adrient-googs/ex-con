@@ -11,8 +11,8 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import xmpp_handlers
 
 MUTE_MSG = "You have muted x-on-call for one hour."
-REQUEST_MSG = "Your expertise is needed! Please click on the following link: %s"
-FACILITATOR_MSG = "A hangout is in progress. Watch the hangout via the following link: %s"
+REQUEST_MSG = "Your expertise is needed in %s! Please click on the following link: %s"
+FACILITATOR_MSG = "A hangout is in progress for %s. Watch the hangout via the following link: %s"
 HELP_MSG = "Manage your account at %s/manageAccount"
 
 class XmppHandler(xmpp_handlers.CommandHandler):

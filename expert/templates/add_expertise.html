@@ -16,12 +16,12 @@
     Add a category <input id="search" name="addcategory" type="text" value="" style="width:75%"/>
   </div>
   <script>
+  //jQuery.parseJSON("{{ suggestions }}");
   $(function() {
       var availableTags = [
-        <!-- TODO: make this dynamic -->
-        {% for suggestion in suggestions %}
-        "{{suggestion}}",
-        {% endfor %}
+      {% for suggestion in suggestions %}
+        "{{ suggestion|escapejs }}",
+      {% endfor %}
       ];
       $( "input#search" ).autocomplete({
           source: availableTags
@@ -100,7 +100,7 @@
     <div id="{{ category_description_pair.0|slugify }}">
       {{ category_description_pair.1 }}
       <a href="javascript:void(0)" onclick="category_removed('{{ category_description_pair.0|slugify }}')">remove</a>
-      <input type="hidden" name="usercategory" value="{{category_description_pair.1}}"/>
+      <input type="hidden" name="usercategory" value="{{ category_description_pair.1|escape }}"/>
     </div>
   {% endfor %}
   </div>

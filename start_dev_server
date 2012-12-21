@@ -7,4 +7,4 @@ COMPILE_ORDER="${COMPILE_ORDER} expert/coffee/expert.coffee"
 
 echo "Coffeescript Compilation Order:${COMPILE_ORDER}"
 coffee --compile --watch --join expert/javascript/expert.js ${COMPILE_ORDER} &
-dev_appserver.py --high_replication expert
+dev_appserver.py --high_replication --clear_datastore expert

@@ -17,7 +17,7 @@
       var availableTags = [
         <!-- TODO: make this dynamic -->
         {% for suggestion in suggestions %}
-        "{{suggestion}}",
+        "{{ suggestion }}",
         {% endfor %}
       ];
       $( "input#search" ).autocomplete({
@@ -41,7 +41,7 @@
         <div class="user-name test-orange">with {{ area.user_name }}</div>
     
         {% if area.user_available %}
-          <a class="hangoutlink" href="/connect?user={{area.user_email}}">
+          <a class="hangoutlink" href="/connect?user={{ area.user_email|urlencode }}&category={{ category.name|title|urlencode }}">
             <img src="static/hangout-button.png"
               alt="Start a Hangout"
               class="hangout"/>

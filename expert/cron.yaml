@@ -1,5 +1,5 @@
 cron:
 - description: daily calendar update
-  url: /calendarCron
+  url: /admin/calendarCron
   schedule: every day 00:00
   timezone: America/Los_Angeles

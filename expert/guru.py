@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from google.appengine.dist import use_library
+use_library('django', '1.2')
 
 import datetime
 import logging
@@ -29,6 +31,7 @@ from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.ereporter import report_generator
 from google.appengine.ext.webapp import template
+from google.appengine.ext.webapp.util import login_required
 
 # include our own libraries from the 'python' path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'python'))
@@ -81,23 +84,34 @@ decorator = oauth2decorator_from_clientsecrets(
     scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/plus.profiles.read https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.readonly',
     message=MISSING_CLIENT_SECRETS_MESSAGE)
 
+def user_required(method):
+  """Decorator for making sure the User entity is created for the user"""
+
+  def _user_required(request_handler):
+    user = users.get_current_user()
+    u = User.get_by_key_name(user.email())
+    if not u:
+      u = User(email=user.email(),user_id=user.user_id())
+      u.put()
+    method(request_handler)
+  
+  return _user_required
+
 class MainHandler(webapp.RequestHandler):
   """Main landing page that shows available experts/categories."""
 
   def Render(self, template_file, template_values):
     path = os.path.join(os.path.dirname(__file__), 'templates', template_file)
+    logging.info(path)
+    logging.info(template_values)
+    # self.render_template(path, template_values)
     self.response.out.write(template.render(path, template_values))
 
+  @login_required
+  @user_required
   def get(self):
     user = users.get_current_user()
-    if not user:
-      self.redirect(users.create_login_url("/"))
-      return
-    token = channel.create_channel(user.user_id())
-    is_expert = False
     u = User.get_by_key_name(user.email())
-    if u:
-      is_expert = u.is_expert
     categories = []
     suggestions = set()
     for category in Category.all():
@@ -116,49 +130,16 @@ class MainHandler(webapp.RequestHandler):
           categories.append({'name':category.name, 'areas':area_data})
     self.Render("main.html", {
       'user': u,
+      'validate': u.validate(),
       'contents': 'expert_list.html',
-      'token': token,
-      'is_expert': is_expert,
+      'token': channel.create_channel(user.user_id()),
+      'is_expert': u.is_expert,
       'categories': categories,
       'suggestions': [suggestion for suggestion in suggestions],
       'login': users.create_login_url("/"),
       'logout': users.create_logout_url("/"),
       'is_admin': users.is_current_user_admin(),
     })
-
-class CalendarCronHandler(webapp.RequestHandler):
-  """For each expert, refresh calendar busy_time."""
-
-  def get(self):
-    for u in User.all().fetch(1000):
-      # Check if this user is an expert and has an id
-      if u.user_id and u.is_expert:
-        credentials = StorageByKeyName(
-          CredentialsModel, u.user_id, 'credentials').get()
-        if credentials is not None:
-          if credentials.invalid:
-            logging.error("Credentials invalid for %s" % u.email)
-            continue
-          try:
-            email = u.email
-            # Authorize takes care of refreshing an expired token
-            http = credentials.authorize(httplib2.Http())
-            now = datetime.utcnow().replace(microsecond=0)
-            tomorrow = now + timedelta(days=1)
-            body = {}
-            body['timeMax'] = tomorrow.isoformat() + 'Z'
-            body['timeMin'] = now.isoformat() + 'Z'
-            body['items'] = [{'id': email}]
-            response = calendar_service.freebusy().query(body=body).execute(http=http)
-            logging.info(response)
-            if response.get('calendars') and response['calendars'].get(email) and response['calendars'][email].get('busy') and not response['calendars'][email].get('errors'):
-              # Store the busy schedule
-              logging.info('storing busy schedule')
-              u.busy_time = json.dumps(response['calendars'][email]['busy'])
-              u.put()
-          except AccessTokenRefreshError:
-            logging.error('AccessTokenRefreshError for user id ' + u.user_id)            
-            continue
 
 class AddExpertiseHandler(webapp.RequestHandler):
   """Presents a page for the user to sign up for expert categories."""
@@ -168,68 +149,32 @@ class AddExpertiseHandler(webapp.RequestHandler):
     self.response.out.write(template.render(path, template_values))
 
   @decorator.oauth_required
+  @user_required
   def get(self):
     user = users.get_current_user()
-    if user == None:
-      self.redirect(users.create_login_url("/manageAccount"))
-      return
     u = User.get_by_key_name(user.email())
-    if u == None:
-      self.redirect(users.create_login_url("/manageAccount"))
+    if not u.is_expert and not u.convert_to_expert(service, calendar_service, decorator):
+      # Token access error. Go back to sign up page and restart flow
+      self.redirect('/signUp')
       return
-    if not u.is_expert:
-      try:
-        http = decorator.http()
-        
-        # Query the plus service for the user's name, profile picture, and profile url
-        me = service.people().get(userId='me').execute(http=http)
-        logging.info(me)
-        if me.get('image') and me['image'].get('url'):          
-          u.profile_pic = me['image']['url']
-        if me.get('displayName'):
-          u.name = me['displayName']
-        if me.get('url'):
-          u.plus_page = me['url']
-        u.is_expert = True
-
-        # Query the calendar service for the user's busy schedule
-        email = user.email()
-        now = datetime.utcnow().replace(microsecond=0)
-        tomorrow = now + timedelta(days=1)
-        body = {}
-        body['timeMax'] = tomorrow.isoformat() + 'Z'
-        body['timeMin'] = now.isoformat() + 'Z'
-        body['items'] = [{'id': email}]
-        response = calendar_service.freebusy().query(body=body).execute(http=http)
-        logging.info(response)
-        if response.get('calendars') and response['calendars'].get(email) and response['calendars'][email].get('busy') and not response['calendars'][email].get('errors'):
-          # Store the busy schedule
-          logging.info('storing busy schedule')
-          u.busy_time = json.dumps(response['calendars'][email]['busy'])
-        u.put()
-        # calendar = calendar_service.calendars().get(calendarId='primary').execute(http=http)
-        # logging.error(calendar['summary'])
-      except AccessTokenRefreshError:
-        self.redirect('/manageAccount')
-        return
         
     # get the areas of expertise for this user
     user_areas = u.get_areas_of_expertise()
-    user_areas_dict = dict((area.category.name, area) for area in user_areas)
-
-    # construct a data structure of all categories
-    all_categories = []
-    for category in Category.all():
-      category_data = {
-        'checked': False,
-        'name': category.name,
-        'description': category.name,      
-      }
-      if category.name in user_areas_dict:
-        category_data['checked'] = True
-        category_data['description'] = \
-          user_areas_dict[category.name].description
-      all_categories.append(category_data)
+    # user_areas_dict = dict((area.category.name, area) for area in user_areas)
+    # 
+    # # construct a data structure of all categories
+    # all_categories = []
+    # for category in Category.all():
+    #   category_data = {
+    #     'checked': False,
+    #     'name': category.name,
+    #     'description': category.name,      
+    #   }
+    #   if category.name in user_areas_dict:
+    #     category_data['checked'] = True
+    #     category_data['description'] = \
+    #       user_areas_dict[category.name].description
+    #   all_categories.append(category_data)
       
     suggestions = set()
     for category in Category.all():
@@ -238,10 +183,11 @@ class AddExpertiseHandler(webapp.RequestHandler):
 
     # this is what we pass to the templating engine
     template_values = {
-      'all_categories': all_categories,
+      # 'all_categories': all_categories,
       'suggestions': [suggestion for suggestion in suggestions],
       'user_categories': [(area.category.name.title(), area.category.name.title() + ' :: ' + area.description.title()) for area in user_areas],
       'user': u,
+      'validate': u.validate(),
       'logout': users.create_logout_url("/"),
       'contents': 'add_expertise.html',
       'is_expert': u.is_expert,
@@ -257,7 +203,7 @@ class AddExpertiseHandler(webapp.RequestHandler):
       return
     u = User.get_by_key_name(user.email())
     if u == None:
-      self.redirect(users.create_login_url("/manageAccount"))
+      self.redirect(users.create_login_url("/signUp"))
       return
       
     # add all the existing categories
@@ -268,18 +214,6 @@ class AddExpertiseHandler(webapp.RequestHandler):
 
     u.expert_opt_out = self.request.get("expertoptout") != "true"
     u.put()
-    # for param in self.request.arguments():
-    #   value = self.request.get(param)
-    #   if param == "expertoptout":
-    #     u.expert_opt_out = self.request.get("expertoptout") != "true"
-    #     u.put()
-    #   elif not re.search(" description$", param) and value == "true":
-    #     if not Category.get_by_key_name(param):
-    #       c = Category(name=param)
-    #       c.put()
-    #     description = self.request.get('%s description' % param)
-    #     logging.error(param + " :: " + description)
-    #     u.add_category(param, description)
     
     for category_subcategory in self.request.get_all("usercategory"):
       if category_subcategory and category_subcategory != "" and re.search("\s::\s", category_subcategory):
@@ -292,6 +226,19 @@ class AddExpertiseHandler(webapp.RequestHandler):
         u.add_category(category_name, subcategory)
       
         
+    # for param in self.request.arguments():
+    #   value = self.request.get(param)
+    #   if param == "expertoptout":
+    #     u.expert_opt_out = self.request.get("expertoptout") != "true"
+    #     u.put()
+    #   elif not re.search(" description$", param) and value == "true":
+    #     if not Category.get_by_key_name(param):
+    #       c = Category(name=param)
+    #       c.put()
+    #     description = self.request.get('%s description' % param)
+    #     logging.error(param + " :: " + description)
+    #     u.add_category(param, description)
+
     # for category in Category.all().fetch(100):
     #    if self.request.get(category.name) == 'true':
     #      description = self.request.get('%s description' % category.name)
@@ -317,26 +264,32 @@ class AddExpertiseHandler(webapp.RequestHandler):
     #   u.add_category(category_name, subcategory)
     
     # do the opt out stuff
-    self.redirect("/manageAccount")
+    self.redirect("/")
 
 class ConnectHandler(webapp.RequestHandler):
-  """Connects the user in the webapp to expert."""
+  """Connects the user in the self.response.write to expert."""
 
+  @login_required
   def get(self):
     user = self.request.get('user')
+    category = self.request.get('category')
     u = User.get_by_key_name(user)
-    if u == None or not u.is_available_for_hangout():
-        self.response.out.write("<html><body><p>No such user</p></body></html>")
-        logging.error('Connect request to invalid and/or unavailable user/expert ' + user)
-        self.redirect('/')
-        return
+    if u == None or not u.validate() or not u.is_available_for_hangout():
+      logging.error('Connect request to invalid and/or unavailable user/expert ' + user)
+      self.redirect('/')
+      return
+    c = Category.get_by_key_name(category.lower())
+    if not c:
+      logging.error('Connect request with invalid category key: ' + category.lower())
+      self.redirect('/')
+      return
     url = HangoutStats.get_hangout_url()
-    logging.info('Hangout url: %s' % url)
-    xmpp.send_message(u.email, chat.REQUEST_MSG % (url,))
+    logging.info('Hangout url: %s in category %s' % (url, category))
+    xmpp.send_message(u.email, chat.REQUEST_MSG % (category, url))
     for email in ['karishmashah@google.com', 'charleschen@google.com', 'adrient@google.com']:
       u = User.get_by_key_name(email)
       if u and u.is_subscribed:
-        xmpp.send_message(email, chat.FACILITATOR_MSG % (url,))
+        xmpp.send_message(email, chat.FACILITATOR_MSG % (category, url))
     self.redirect(url)
 
 class SignUpHandler(webapp.RequestHandler):
@@ -347,20 +300,13 @@ class SignUpHandler(webapp.RequestHandler):
     self.response.out.write(template.render(path, template_values))
 
   @decorator.oauth_aware
+  @user_required
   def get(self):
     user = users.get_current_user()
-    if user == None:
-      self.redirect(users.create_login_url("/signUp"))
-      return
     u = User.get_by_key_name(user.email())
-    if u == None:
-      u = User(email=user.email())
-      u.put()
-    if not u.user_id:
-      u.user_id = user.user_id()
-      u.put()
     template_values = {
       'user': u,
+      'validate': u.validate(),
       'url': decorator.authorize_url(),
       'has_credentials': decorator.has_credentials(),
       'contents': 'sign_up.html',
@@ -370,18 +316,24 @@ class SignUpHandler(webapp.RequestHandler):
 class SendInviteHandler(webapp.RequestHandler):
   """Sends an invite to the user account."""
 
+  @login_required
+  @user_required
   def get(self):
     user = users.get_current_user()
-    if user == None:
-      self.redirect(users.create_login_url("/signUp"))
-      return
     xmpp.send_invite(user.email())
     self.redirect("/signUp")
+
+class CalendarCronHandler(webapp.RequestHandler):
+  """For each expert, refresh calendar busy_time."""
+
+  def get(self):
+    for u in User.all().fetch(1000):
+      u.update_calendar(calendar_service)
 
 def main():
   handlers = [
       ('/', MainHandler),
-      ('/calendarCron', CalendarCronHandler),
+      ('/admin/calendarCron', CalendarCronHandler),
       ('/connect', ConnectHandler),
       ('/manageAccount', AddExpertiseHandler),
       ('/sendInvite', SendInviteHandler),

@@ -1,11 +1,14 @@
+import httplib2
 import logging
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils import simplejson as json
 from google.appengine.api import channel
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
+from oauth2client.client import AccessTokenRefreshError
+from oauth2client.appengine import CredentialsModel, StorageByKeyName
 
 class HangoutStats(db.Model):
   """Keeps a summary of the hangout stats"""
@@ -61,6 +64,7 @@ class User(db.Model):
   is_expert = db.BooleanProperty()
   busy_time = db.StringProperty(default="[]") # Assign a default empty array which means by default they have a free schedule.
   expert_opt_out = db.BooleanProperty()
+  # account_state = db.StringProperty(required=True, choices=set(["chat", "user", "expert"]))
   
   def __init__(self, *args, **kwargs):
     """Constructor."""
@@ -78,7 +82,90 @@ class User(db.Model):
   def get_categories(self):
     """Returns a list of categories associated with this user."""
     return [area.category for area in get_areas_of_expertise()]
-  
+
+  def validate(self):
+    """Validates the User entity."""
+    if self.user_id and self.is_expert and self.is_subscribed:
+      credentials = StorageByKeyName(
+        CredentialsModel, self.user_id, 'credentials').get()
+      if not credentials or credentials.invalid:
+        logging.error("Credentials unavailable/invalid for %s" % self.email)
+        return False
+      # Credentials are valid
+      return True
+    elif self.is_expert:
+      # No user_id and isn't subscribed
+      return False
+    else:
+      # Not an expert so account state is okay no matter what
+      return True
+
+  def convert_to_expert(self, service, calendar_service, decorator):
+    """Converts this user to an expert"""
+    if not self.is_expert:
+      try:
+        http = decorator.http()
+        # Query the plus service for the user's name, profile picture, and profile url
+        me = service.people().get(userId='me').execute(http=http)
+        logging.info(me)
+        if me.get('image') and me['image'].get('url'):          
+          self.profile_pic = me['image']['url']
+        if me.get('displayName'):
+          self.name = me['displayName']
+        if me.get('url'):
+          self.plus_page = me['url']
+        self.is_expert = True
+
+        # Query the calendar service for the user's busy schedule
+        email = self.email
+        now = datetime.utcnow().replace(microsecond=0)
+        tomorrow = now + timedelta(days=1)
+        body = {}
+        body['timeMax'] = tomorrow.isoformat() + 'Z'
+        body['timeMin'] = now.isoformat() + 'Z'
+        body['items'] = [{'id': email}]
+        response = calendar_service.freebusy().query(body=body).execute(http=http)
+        logging.info(response)
+        if response.get('calendars') and response['calendars'].get(email) and response['calendars'][email].get('busy') and not response['calendars'][email].get('errors'):
+          # Store the busy schedule
+          logging.info('storing busy schedule')
+          self.busy_time = json.dumps(response['calendars'][email]['busy'])
+        self.put()
+        return True
+      except AccessTokenRefreshError:
+        return False
+    return False
+
+  def update_calendar(self, calendar_service):
+    """Updates the user's calendar"""
+    # Check if this user is an expert and has an id
+    if self.user_id and self.is_expert:
+      credentials = StorageByKeyName(
+        CredentialsModel, self.user_id, 'credentials').get()
+      if credentials is not None:
+        if credentials.invalid:
+          logging.error("Credentials invalid for %s" % self.email)
+          # return
+        try:
+          email = self.email
+          # Authorize takes care of refreshing an expired token
+          http = credentials.authorize(httplib2.Http())
+          now = datetime.utcnow().replace(microsecond=0)
+          tomorrow = now + timedelta(days=1)
+          body = {}
+          body['timeMax'] = tomorrow.isoformat() + 'Z'
+          body['timeMin'] = now.isoformat() + 'Z'
+          body['items'] = [{'id': email}]
+          response = calendar_service.freebusy().query(body=body).execute(http=http)
+          logging.info(response)
+          if response.get('calendars') and response['calendars'].get(email) and response['calendars'][email].get('busy') and not response['calendars'][email].get('errors'):
+            # Store the busy schedule
+            logging.info('storing busy schedule')
+            self.busy_time = json.dumps(response['calendars'][email]['busy'])
+            self.put()
+        except AccessTokenRefreshError:
+          logging.error('AccessTokenRefreshError for user id ' + self.user_id)            
+
   # Transactional query so get/put operations see most recently written data
   @db.transactional(xg=True)
   def add_category(self, category_name, category_description):
